@@ -1,66 +1,87 @@
 # IATF Solutions Toolbox
 
-AI-powered quality engineering tools for automotive suppliers.
+An AI-powered quality engineering and cost optimization platform designed for automotive suppliers and modern engineering teams.
 
-## Tools
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=flat&logo=tailwind-css)
+![Stripe](https://img.shields.io/badge/Stripe-Billing-6772E5?style=flat&logo=stripe)
+![Anthropic](https://img.shields.io/badge/Claude_3.5_Sonnet-AI-D97757?style=flat)
 
-| Module | Status |
-|--------|--------|
-| 8D Generator | In development |
+## 🚀 Key Features
 
-## Tech Stack
+*   **8D Report Generator:** An intelligent, multi-step wizard that guides users through the VDA 8D problem-solving methodology. Uses AI to automatically generate Root Cause Analyses (5 Whys), Containment Actions, and fully compliant Corrective Actions based on structural rules.
+*   **AI Cost Optimizer:** A dashboard that connects to AWS environments to analyze billing records, detect anomalies, identify underutilized resources, and generate cost-saving recommendations.
+*   **Internationalization (i18n):** Full support for English and German interfaces (routing and translations via `next-intl`).
+*   **Professional Exports:** Server-side generation of pixel-perfect PDF and XLSX files.
+*   **Credit-Based Billing:** Integrated Stripe checkout flow for credit purchases with webhook verification.
+*   **Custom Quote Requests:** Direct email pipeline (via Resend) for enterprise/custom package inquiries.
+*   **Zero-Database Architecture:** To maximize security and minimize liability, complaint data is strictly maintained in the browser (`localStorage`) and never saved to a database.
 
-- **Framework**: Next.js 15 App Router + TypeScript
-- **UI**: TailwindCSS v4 + shadcn/ui
-- **Hosting**: Vercel
-- **Database**: Upstash Redis (access codes only)
-- **AI**: Anthropic Claude Sonnet (default) / OpenAI (switchable via `AI_PROVIDER`)
-- **PDF**: react-pdf (server-side)
-- **XLSX**: ExcelJS (server-side)
-- **Session**: iron-session (httpOnly cookie, 24h)
+## 🛠 Tech Stack
 
-## Architecture
+*   **Framework:** Next.js 15 (App Router) + React 19
+*   **Language:** TypeScript
+*   **Styling & UI:** Tailwind CSS v4, `shadcn/ui`, `lucide-react`, Framer Motion
+*   **AI Providers:** Anthropic (`@anthropic-ai/sdk`)
+*   **Payment & Billing:** Stripe
+*   **Email Delivery:** Resend
+*   **Caching/State:** Upstash Redis (for API rate limiting and stateless session verification)
+*   **Form Management:** React Hook Form + Zod
+*   **Exports:** `@react-pdf/renderer`, `exceljs`
 
-- All 8D logic lives in `modules/eightd/` for future toolbox extensibility
-- AI provider abstracted in `lib/ai/provider.ts` — switch via `AI_PROVIDER` env var
-- No complaint data stored server-side — Redis stores access codes only
-- All report data lives in the browser (localStorage autosave)
+## ⚙️ Environment Variables
 
-## Access Model
+To run this project locally, create a `.env.local` file in the root directory and populate it with the following:
 
-Single-use access codes purchased via Stripe. Validated against Upstash Redis (atomic, SHA-256 + pepper). Success issues a 24h httpOnly session cookie.
+```env
+# URL Configuration
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
-## Getting Started
+# Stripe Integration
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-First, run the development server:
+# AI Configuration
+ANTHROPIC_API_KEY=sk-ant-...
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Email Configuration (Resend)
+RESEND_API_KEY=re_...
+CONTACT_EMAIL_TO=youremail@example.com
+
+# Upstash Redis
+KV_REST_API_URL=https://...
+KV_REST_API_TOKEN=...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+*Note: For the AWS Cost Optimizer to function, AWS credentials (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`) must be provided by the end-user via the UI or added locally for testing.*
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 💻 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    # or yarn install
+    ```
 
-## Learn More
+2.  **Run the development server:**
+    ```bash
+    npm run dev
+    # or yarn dev
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+3.  **Open the application:**
+    Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🏗 Architecture Details
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+*   **Locality of Data:** Forms utilize a robust auto-save hook tied to `localStorage` equipped with UTF-8 safe Base64 obfuscation to prevent tampering. When users export a report, the data is sent statelessly to the server via an API route, transformed into a PDF/XLSX buffer, and returned directly to the client without ever touching a disk.
+*   **AI Prompting:** The `modules/eightd/lib/prompts.ts` file enforces strict IATF 16949 / VDA vocabulary and logically checks 5-Why chaining.
+*   **Webhooks:** The `/api/webhooks/stripe` endpoint listens for `checkout.session.completed` events, updates the user's credit balance in Redis, and enables immediate PDF generation.
 
-## Deploy on Vercel
+## 🛡 Security
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- No sensitive corporate RCA (Root Cause Analysis) data is stored in a database.
+- Redis is only utilized to manage access tokens, credit counters, and API rate limits. 
+- API routes are protected by robust Zod validation schemas.

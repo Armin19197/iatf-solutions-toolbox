@@ -1,22 +1,26 @@
 import { Redis } from '@upstash/redis'
 
-function createRedisClient(): Redis | null {
-  const url = process.env.KV_REST_API_URL
-  const token = process.env.KV_REST_API_TOKEN
-  if (!url || !token) {
-    if (process.env.NODE_ENV === 'production') {
-      console.warn('Missing Upstash Redis environment variables: KV_REST_API_URL, KV_REST_API_TOKEN')
-    }
-    return null
-  }
-  return new Redis({ url, token })
-}
+let redisInstance: Redis | null = null
 
-export const redis = createRedisClient()
-
+/**
+ * Lazy initialization of Redis client.
+ * Ensures environment variables are available and creates the instance only once.
+ */
 export function getRedis(): Redis {
-  if (!redis) {
-    throw new Error('Missing Upstash Redis environment variables: KV_REST_API_URL, KV_REST_API_TOKEN')
+  if (!redisInstance) {
+    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+      throw new Error('Missing Upstash Redis environment variables: KV_REST_API_URL, KV_REST_API_TOKEN')
+    }
+    
+    redisInstance = new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    })
   }
-  return redis
+  
+  return redisInstance
 }
+
+// Re-export function only — no eager initialisation at module scope.
+// Callers should use getRedis() directly to avoid import-time crashes
+// when Redis environment variables are not configured.

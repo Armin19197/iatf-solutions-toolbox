@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# The Next.js plugin is automatically installed by Netlify, 
+# but explicitly declaring it ensures proper SSR and API route handling.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Extend function timeout to maximum allowed on free tier (26s).
+# AI calls (sufficiency + generation) need 10–20s per attempt.
+[functions]
+  external_node_modules = ["@anthropic-ai/sdk", "openai", "@google/generative-ai"]
+  node_bundler = "esbuild"
+
+[functions."api/*"]
+  timeout = 26
+
+# Optional: Ensure environment variables are mapped correctly if needed
+[build.environment]
+  NODE_VERSION = "20"
