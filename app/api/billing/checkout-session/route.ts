@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const baseUrl = 'https://incredible-cendol-81e180.netlify.app'
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
     const successUrl = resolveUrl(
       baseUrl,
       String(

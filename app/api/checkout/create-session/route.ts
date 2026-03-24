@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const matchedPlan = plans.find((plan) => plan.stripePriceId === priceId && plan.toolId === (toolId || 'tool_8d'))
 
     const stripeConfig = await getStripeConfig()
-    const baseUrl = 'https://incredible-cendol-81e180.netlify.app'
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
 
     const session = await createBillingCheckoutSession({
       priceId,
