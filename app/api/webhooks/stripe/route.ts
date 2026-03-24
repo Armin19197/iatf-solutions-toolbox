@@ -1,10 +1,14 @@
 import Stripe from 'stripe'
-import { generateCreditCodes } from '@/lib/credits/generate'
-import { sendCreditDeliveryEmail } from '@/lib/email/sendCredit'
 import { NextResponse } from 'next/server'
 import { getStripeClient } from '@/lib/billing/stripe'
 import { getStripeConfig } from '@/lib/billing/store'
-import { markEventProcessed } from '@/lib/redis/codeStore'
+import { fulfillCheckoutSession } from '@/lib/billing/fulfillment'
+import {
+  clearEventProcessing,
+  isEventProcessed,
+  markEventProcessed,
+  reserveEventProcessing,
+} from '@/lib/redis/codeStore'
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -34,35 +38,44 @@ export async function POST(req: Request) {
   console.log(`[Webhook] Received Stripe event: ${event.type}`)
 
   if (event.type === 'checkout.session.completed') {
-    // Idempotency: skip already-processed events
-    const isNewEvent = await markEventProcessed(event.id)
-    if (!isNewEvent) {
+    const alreadyProcessed = await isEventProcessed(event.id)
+    if (alreadyProcessed) {
       console.log(`[Webhook] Event ${event.id} already processed. Skipping.`)
       return new NextResponse('Already processed', { status: 200 })
     }
 
+    const hasLock = await reserveEventProcessing(event.id)
+    if (!hasLock) {
+      console.log(`[Webhook] Event ${event.id} is already being processed. Skipping duplicate delivery.`)
+      return new NextResponse('Already processing', { status: 200 })
+    }
+
     const session = event.data.object as Stripe.Checkout.Session
+    const sessionId = session.id
     
     const email = session.customer_details?.email || session.customer_email
     const metadata = session.metadata || {}
-    const count = parseInt(metadata.creditCount || '1', 10)
+    const parsedCount = parseInt(metadata.creditCount || '1', 10)
+    const count = Number.isFinite(parsedCount) && parsedCount > 0 ? parsedCount : 1
     const toolId = metadata.toolId || 'tool_8d'
     const planId = metadata.planId || undefined
 
     if (!email) {
       console.error('No email found in session, cannot send code.')
+      await clearEventProcessing(event.id)
       return new NextResponse('OK', { status: 200 })
     }
 
     try {
-      // 1. Generate an 8 character uppercase alphanumeric code, store in Redis
-      const codes = await generateCreditCodes({ toolId, planId, count, sessionId: session.id })
+      const status = await fulfillCheckoutSession({ sessionId, email, toolId, planId, count })
+
+      // Mark the Stripe event as processed once fulfillment path has been resolved.
+      await markEventProcessed(event.id)
+      await clearEventProcessing(event.id)
       
-      // 2. Send email to the customer
-      await sendCreditDeliveryEmail({ to: email, toolId, codes })
-      
-      console.log(`[Webhook] Processed purchase. Generated ${codes.length} code(s) for ${email}.`)
+      console.log(`[Webhook] Processed purchase for ${email}. Fulfillment status: ${status}.`)
     } catch (err: any) {
+      await clearEventProcessing(event.id)
       console.error('[Webhook] Failed to generate codes or send email:', err)
       return new NextResponse('Internal Server Error', { status: 500 })
     }

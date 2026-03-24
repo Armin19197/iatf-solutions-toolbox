@@ -7,8 +7,7 @@ export async function sendCreditDeliveryEmail({ to, toolId, codes }: { to: strin
     
     const resendApiKey = process.env.RESEND_API_KEY
     if (!resendApiKey) {
-      console.log('No RESEND_API_KEY found, skipping email.')
-      return
+      throw new Error('RESEND_API_KEY is not configured')
     }
 
     const resend = new Resend(resendApiKey)
@@ -16,13 +15,6 @@ export async function sendCreditDeliveryEmail({ to, toolId, codes }: { to: strin
     const tools = await listIntegratedTools()
     const activeTool = toolId ? tools.find(t => t.id === toolId) : undefined
     const toolName = activeTool?.name || 'IATF Solutions'
-
-    console.log('\n=======================================')
-    console.log(`✉️ EMAIL SIMULATION FOR: ${to}`)
-    console.log(`Tool: ${toolName}`)
-    console.log(`Codes Generated (${codes.length}):`)
-    codes.forEach((c, i) => console.log(`  ${i + 1}. ${c}`))
-    console.log('=======================================\n')
 
     const { data, error } = await resend.emails.send({
       from: process.env.CREDIT_DELIVERY_EMAIL_FROM || 'Acme <onboarding@resend.dev>', 
@@ -44,11 +36,12 @@ export async function sendCreditDeliveryEmail({ to, toolId, codes }: { to: strin
     })
 
     if (error) {
-      console.error('❌ Resend API Error:', error.message || error)
+      throw new Error(`Resend API Error: ${error.message || 'Unknown email provider error'}`)
     } else {
       console.log('✅ Email successfully sent! ID:', data?.id)
     }
   } catch (err) {
     console.error('Exception thrown while sending email:', err)
+    throw err
   }
 }

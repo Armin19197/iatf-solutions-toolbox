@@ -11,6 +11,16 @@ export interface StoredCode {
   planId?: string
 }
 
+export interface StoredSessionDelivery {
+  sessionId: string
+  email: string
+  toolId: string
+  planId?: string
+  count: number
+  codes: string[]
+  createdAt: string
+}
+
 const KEY_PREFIX = 'code:'
 
 function codeKey(hash: string): string {
@@ -81,4 +91,65 @@ export async function markEventProcessed(eventId: string, ttlSeconds = 60 * 60 *
   // set returns 'OK' if the key was set (meaning it's new), or null if it already existed
   const result = await redis.set(`webhook_event:${eventId}`, 'processed', { nx: true, ex: ttlSeconds })
   return result !== null
+}
+
+export async function isEventProcessed(eventId: string): Promise<boolean> {
+  const redis = getRedis()
+  const result = await redis.get<string | null>(`webhook_event:${eventId}`)
+  return result === 'processed'
+}
+
+export async function reserveEventProcessing(eventId: string, ttlSeconds = 60 * 10): Promise<boolean> {
+  const redis = getRedis()
+  const result = await redis.set(`webhook_event_lock:${eventId}`, 'processing', { nx: true, ex: ttlSeconds })
+  return result !== null
+}
+
+export async function clearEventProcessing(eventId: string): Promise<void> {
+  const redis = getRedis()
+  await redis.del(`webhook_event_lock:${eventId}`)
+}
+
+export async function isSessionFulfilled(sessionId: string): Promise<boolean> {
+  const redis = getRedis()
+  const result = await redis.get<string | null>(`checkout_session:${sessionId}`)
+  return result === 'fulfilled'
+}
+
+export async function markSessionFulfilled(sessionId: string, ttlSeconds = 60 * 60 * 24 * 30): Promise<boolean> {
+  const redis = getRedis()
+  const result = await redis.set(`checkout_session:${sessionId}`, 'fulfilled', { nx: true, ex: ttlSeconds })
+  return result !== null
+}
+
+export async function reserveSessionFulfillment(sessionId: string, ttlSeconds = 60 * 10): Promise<boolean> {
+  const redis = getRedis()
+  const result = await redis.set(`checkout_session_lock:${sessionId}`, 'processing', { nx: true, ex: ttlSeconds })
+  return result !== null
+}
+
+export async function clearSessionFulfillmentReservation(sessionId: string): Promise<void> {
+  const redis = getRedis()
+  await redis.del(`checkout_session_lock:${sessionId}`)
+}
+
+export async function getSessionDelivery(sessionId: string): Promise<StoredSessionDelivery | null> {
+  const redis = getRedis()
+  const result = await redis.get<StoredSessionDelivery | null>(`checkout_session_delivery:${sessionId}`)
+  return result || null
+}
+
+export async function saveSessionDelivery(
+  sessionId: string,
+  delivery: Omit<StoredSessionDelivery, 'sessionId' | 'createdAt'>,
+  ttlSeconds = 60 * 60 * 24 * 30,
+): Promise<void> {
+  const redis = getRedis()
+  const entry: StoredSessionDelivery = {
+    sessionId,
+    createdAt: new Date().toISOString(),
+    ...delivery,
+  }
+
+  await redis.set(`checkout_session_delivery:${sessionId}`, entry, { ex: ttlSeconds })
 }
