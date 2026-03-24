@@ -102,8 +102,28 @@ function tableHeader(ws: ExcelJS.Worksheet, row: number, headers: { col: number;
 }
 
 /** Data row in a table */
-function tableRow(ws: ExcelJS.Worksheet, row: number, cells: { col: number; endCol: number; value: string }[], alt = false) {
-  ws.getRow(row).height = 20
+function tableRow(
+  ws: ExcelJS.Worksheet,
+  row: number,
+  cells: { col: number; endCol: number; value: string }[],
+  alt = false,
+  minHeight = 20,
+) {
+  // Estimate wrapped lines to avoid cramped multiline content.
+  let maxEstimatedLines = 1
+  for (const c of cells) {
+    const value = (c.value || '').toString()
+    const span = Math.max(1, c.endCol - c.col + 1)
+    const charsPerLine = Math.max(18, span * 14)
+    const explicitLines = value.split(/\r?\n/)
+    let estimatedLines = 0
+    for (const line of explicitLines) {
+      estimatedLines += Math.max(1, Math.ceil(line.length / charsPerLine))
+    }
+    maxEstimatedLines = Math.max(maxEstimatedLines, estimatedLines)
+  }
+
+  ws.getRow(row).height = Math.max(minHeight, Math.min(120, 16 * maxEstimatedLines))
   for (const c of cells) {
     if (c.col !== c.endCol) merge(ws, row, c.col, c.endCol)
     const cell = ws.getCell(row, c.col)
@@ -426,7 +446,7 @@ function build8DReport(wb: ExcelJS.Workbook, r: ReportData, isDE: boolean) {
       { col: 5, endCol: 6, value: a ? `${a.linkedCauseType} – ${a.relatedRootCause}` : '' },
       { col: 7, endCol: 8, value: a?.responsible || '' },
       { col: 9, endCol: 9, value: a?.targetDate || '' },
-    ], i % 2 === 1)
+    ], i % 2 === 1, 28)
     row++
   }
 

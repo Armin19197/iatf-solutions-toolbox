@@ -38,18 +38,20 @@ Follow these fundamental rules:
 5. Write short and precise statements.
 6. Always use present tense.
 
-All actions must follow the grammar rule:
+All actions must follow language-specific action grammar:
 
-Verb + Noun (present tense)
+- English output: Verb + Noun (present tense)
+- German output: Substantiv + Verb (Praesens/Infinitiv)
 
-Examples:
+Examples EN:
 - implement containment action
 - perform 100% sorting
 - block shipment
-- quarantine suspect stock
-- update control plan
-- validate measurement system
-- introduce inspection step
+
+Examples DE:
+- Sperrbestand bilden
+- 100%-Sortierung durchfuehren
+- Warenausgangssperre setzen
 
 Avoid passive formulations such as:
 - the process will be improved
@@ -76,7 +78,7 @@ You are reviewing a specific field in an 8D report form and providing:
 2. A list of missing fields or information that should be added
 3. Suggestions for improving the content
 
-Apply the grammar rule: Verb + Noun (present tense) for all actions.
+Apply language-specific action grammar for all actions (EN: Verb + Noun, DE: Substantiv + Verb).
 Eliminate vague wording.
 
 Respond in ${lang}.
@@ -217,7 +219,9 @@ Containment actions must:
 
 Containment actions are TEMPORARY actions.
 
-Use the grammar rule: Verb + Noun (present tense)
+Use language-specific action grammar:
+- English: Verb + Noun (present tense)
+- German: Substantiv + Verb (Praesens/Infinitiv)
 
 Examples:
 - perform 100% sorting
@@ -329,7 +333,9 @@ Corrective actions must eliminate the root causes identified in D4:
 • SUA → system/governance corrective actions for occurrence
 • SUN → system/governance corrective actions for detection
 
-Grammar Rule: Verb + Noun (present tense)
+Grammar Rule (language-specific):
+- English: Verb + Noun (present tense)
+- German: Substantiv + Verb (Praesens/Infinitiv)
 
 Examples:
 - update control plan
@@ -341,7 +347,7 @@ Examples:
 - establish tool life management
 
 Each action must include:
-- Action description (Verb + Noun)
+- Action description (EN: Verb + Noun | DE: Substantiv + Verb)
 - Notes (detailed explanation)
 - Linked cause type (TUA, TUN, SUA, or SUN)
 - Linked cause text (the root cause this addresses)
@@ -399,7 +405,7 @@ Required JSON schema:
     "actions": [
       {
         "id": "string (e.g., ICA-1)",
-        "action": "string (Verb + Noun)",
+        "action": "string (EN: Verb + Noun | DE: Substantiv + Verb)",
         "scope": "finished_goods" | "wip" | "in_transit" | "customer_stock" | "all",
         "responsible": "string (role, not name)",
         "implementationDate": "string (ISO YYYY-MM-DD)",
@@ -446,7 +452,7 @@ Required JSON schema:
     "actions": [
       {
         "id": "string (e.g., CA-1)",
-        "action": "string (Verb + Noun)",
+        "action": "string (EN: Verb + Noun | DE: Substantiv + Verb)",
         "notes": "string",
         "linkedCauseType": "TUA" | "TUN" | "SUA" | "SUN",
         "linkedCauseText": "string",
@@ -498,7 +504,7 @@ Only use entries that fit the actual problem context.` : ''}
 
 Generate comprehensive, specific D2 enhancement, D3, D4, and D5 content tailored to this exact problem.
 Follow VDA 8D methodology strictly.
-Ensure all actions follow the Verb + Noun grammar rule.`
+Ensure all actions follow language-specific action grammar (EN Verb + Noun / DE Substantiv + Verb).`
 }
 
 // ─── 3b. Split Generation: Phase 1 (D3+D4) ────────────────────────────────────
@@ -549,7 +555,9 @@ Containment actions must:
 
 Containment actions are TEMPORARY actions.
 
-Use the grammar rule: Verb + Noun (present tense)
+Use language-specific action grammar:
+- English: Verb + Noun (present tense)
+- German: Substantiv + Verb (Praesens/Infinitiv)
 
 Examples:
 - perform 100% sorting
@@ -674,7 +682,7 @@ Required JSON schema:
     "actions": [
       {
         "id": "string (e.g., ICA-1)",
-        "action": "string (Verb + Noun)",
+        "action": "string (EN: Verb + Noun | DE: Substantiv + Verb)",
         "scope": "finished_goods" | "wip" | "in_transit" | "customer_stock" | "all",
         "responsible": "string (role, not name)",
         "implementationDate": "string (ISO YYYY-MM-DD)",
@@ -758,7 +766,7 @@ Only use entries that fit the actual problem context.` : ''}
 
 Generate comprehensive, specific D2 enhancement, D3, and D4 content tailored to this exact problem.
 Follow VDA 8D methodology strictly.
-Ensure all actions follow the Verb + Noun grammar rule.`
+Ensure all actions follow language-specific action grammar (EN Verb + Noun / DE Substantiv + Verb).`
 }
 
 // ─── 3c. Split Generation: Phase 2 (D5) ───────────────────────────────────────
@@ -791,7 +799,9 @@ Corrective actions must eliminate the root causes identified in D4:
 • SUA → system/governance corrective actions for occurrence
 • SUN → system/governance corrective actions for detection
 
-Grammar Rule: Verb + Noun (present tense)
+Grammar Rule (language-specific):
+- English: Verb + Noun (present tense)
+- German: Substantiv + Verb (Praesens/Infinitiv)
 
 Examples:
 - update control plan
@@ -803,7 +813,7 @@ Examples:
 - establish tool life management
 
 Each action must include:
-- Action description (Verb + Noun)
+- Action description (EN: Verb + Noun | DE: Substantiv + Verb)
 - Notes (detailed explanation)
 - Linked cause type (TUA, TUN, SUA, or SUN)
 - Linked cause text (the root cause this addresses)

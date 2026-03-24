@@ -357,6 +357,40 @@ export function useGeneration() {
   return { generate, getCached, loading, loadingPhase, error, result, regenCount, canRegenerate, clearGeneration }
 }
 
+// ─── useD5Generation ────────────────────────────────────────────────────────
+
+export function useD5Generation() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<GenerationD5Result | null>(null)
+
+  const generateD5 = useCallback(
+    async (input: GenerationD5Input, language: 'en' | 'de') => {
+      setLoading(true)
+      setError(null)
+
+      const res = await callAI<GenerationD5Result>('generation-d5', language, input)
+
+      setLoading(false)
+      if (res.success) {
+        setResult(res.data)
+      } else {
+        setError(res.error)
+      }
+
+      return res
+    },
+    [],
+  )
+
+  const clear = useCallback(() => {
+    setResult(null)
+    setError(null)
+  }, [])
+
+  return { generateD5, loading, error, result, clear }
+}
+
 // ─── useConsistencyCheck ─────────────────────────────────────────────────────
 
 export function useConsistencyCheck() {

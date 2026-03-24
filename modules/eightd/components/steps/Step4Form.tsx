@@ -13,7 +13,6 @@ import type {
 } from '@/modules/eightd/types/report'
 import { EMPTY_FIVE_WHY, EMPTY_SYSTEMIC_CAUSE } from '@/modules/eightd/types/report'
 import { useTranslations } from 'next-intl'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,9 +20,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Sparkles, RotateCcw, Loader2 } from 'lucide-react'
-import { useGeneration, useConsistencyCheck, useChainCompletion } from '@/modules/eightd/hooks/useAI'
+import { useGeneration, useConsistencyCheck, useChainCompletion, useD5Generation } from '@/modules/eightd/hooks/useAI'
 import type { ConsistencyInput, ChainCompletionInput } from '@/modules/eightd/types/ai'
-import { mapGenerationToFormData } from '@/modules/eightd/lib/mapGeneration'
+import { mapGenerationToFormData, mapGenerationD5ToFormData } from '@/modules/eightd/lib/mapGeneration'
 import { buildGenerationInput } from '@/modules/eightd/lib/buildGenerationInput'
 import { cn } from '@/lib/utils'
 import { TemplateSection } from '@/modules/eightd/components/steps/TemplateSection'
@@ -92,8 +91,8 @@ function FiveWhyCard({
         <p className="text-xs leading-5 text-muted-foreground">{description}</p>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-        <div className="space-y-3">
+      <div className="mt-4 space-y-4">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)] xl:items-start">
           <div className="space-y-1.5">
             <Label>{t('possibleCause')}</Label>
             <Textarea
@@ -104,38 +103,62 @@ function FiveWhyCard({
             />
           </div>
 
+          <div className="self-start space-y-4 rounded-lg border bg-background p-4">
+            <FormField
+              type="input"
+              label={t('causeDomain')}
+              placeholder={t('causeDomainPh')}
+              value={chain.causeDomain}
+              onChange={(v) => update('causeDomain', v)}
+            />
+            <FormField
+              type="input"
+              label={t('rootCauseCode')}
+              placeholder={t('rootCauseCodePh')}
+              value={chain.rootCauseCode}
+              onChange={(v) => update('rootCauseCode', v)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
           {([1, 2, 3, 4, 5] as const).map((n) => {
             const val = chain[`why${n}` as keyof FiveWhyChain] as string
             const err = whyError?.(n, val)
             return (
               <div key={n} className="space-y-1">
-                <div className="grid gap-2 rounded-lg border bg-background p-3 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:items-center">
+                <div className="grid gap-2 rounded-lg border bg-background p-3 sm:grid-cols-[110px_minmax(0,1fr)] sm:items-start">
                   <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {t('why', { n })}
                   </Label>
-                  <Input
-                    value={val}
-                    onChange={(e) =>
-                      update(`why${n}` as keyof FiveWhyChain, e.target.value)
-                    }
-                    className={cn(err && 'border-red-500 focus-visible:ring-red-500')}
-                  />
-                  {onRegenerateFrom && val.trim() && n < 5 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs shrink-0"
-                      onClick={() => onRegenerateFrom(n)}
-                      disabled={regenLoading}
-                    >
-                      {regenLoading ? (
-                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      ) : (
-                        <RotateCcw className="mr-1 h-3 w-3" />
-                      )}
-                      {t('regenerate')}
-                    </Button>
-                  )}
+                  <div className="space-y-2">
+                    <Textarea
+                      value={val}
+                      onChange={(e) =>
+                        update(`why${n}` as keyof FiveWhyChain, e.target.value)
+                      }
+                      rows={3}
+                      className={cn('min-h-24', err && 'border-red-500 focus-visible:ring-red-500')}
+                    />
+                    {onRegenerateFrom && val.trim() && n < 5 && (
+                      <div className="flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => onRegenerateFrom(n)}
+                          disabled={regenLoading}
+                        >
+                          {regenLoading ? (
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          ) : (
+                            <RotateCcw className="mr-1 h-3 w-3" />
+                          )}
+                          {t('regenerate')}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {err && <p className="text-xs text-red-500 pl-1">{err}</p>}
               </div>
@@ -155,23 +178,6 @@ function FiveWhyCard({
               <p className="text-xs text-red-500">{rootCauseError}</p>
             )}
           </div>
-        </div>
-
-        <div className="space-y-4 rounded-lg border bg-background p-4">
-          <FormField
-            type="input"
-            label={t('causeDomain')}
-            placeholder={t('causeDomainPh')}
-            value={chain.causeDomain}
-            onChange={(v) => update('causeDomain', v)}
-          />
-          <FormField
-            type="input"
-            label={t('rootCauseCode')}
-            placeholder={t('rootCauseCodePh')}
-            value={chain.rootCauseCode}
-            onChange={(v) => update('rootCauseCode', v)}
-          />
         </div>
       </div>
     </div>
@@ -233,6 +239,13 @@ export function Step4Form({
     clear: clearConsistency,
   } = useConsistencyCheck()
 
+  const {
+    generateD5,
+    loading: d5RegenLoading,
+    error: d5RegenError,
+    clear: clearD5Regen,
+  } = useD5Generation()
+
   const hasGeneratedContent =
     genResult !== null ||
     d4.tua.rootCause.trim().length > 0 ||
@@ -256,15 +269,9 @@ export function Step4Form({
   )
 
   const handleRegenerate = () => {
-    onChangeD4({
-      tua: { ...EMPTY_FIVE_WHY },
-      tun: { ...EMPTY_FIVE_WHY },
-      sua: { ...EMPTY_SYSTEMIC_CAUSE },
-      sun: { ...EMPTY_SYSTEMIC_CAUSE },
-    })
-    onChangeD5({ actions: [], plannedVerification: '' })
     clearGeneration()
     clearConsistency()
+    clearD5Regen()
     handleGenerate(true)
   }
 
@@ -368,6 +375,39 @@ export function Step4Form({
     loading: chainLoading,
   } = useChainCompletion()
 
+  const regenerateD5FromD4 = useCallback(
+    async (nextD4: D4RootCause) => {
+      const d5Input = {
+        d2: {
+          what: d2.what,
+          where: d2.where,
+          when: d2.when,
+          howMany: d2.howMany,
+          detectionMethod: d2.detectionMethod,
+          customerComplaintText: d2.customerComplaintText,
+          additionalNotes: d2.additionalNotes,
+        },
+        d4: {
+          tua: nextD4.tua,
+          tun: nextD4.tun,
+          sua: nextD4.sua,
+          sun: nextD4.sun,
+        },
+      }
+
+      const d5Result = await generateD5(d5Input, language)
+      if (!d5Result.success) return
+
+      const mappedD5 = mapGenerationD5ToFormData(d5Result.data)
+      onChangeD5({
+        ...mappedD5,
+        // Keep manually written verification plan text stable.
+        plannedVerification: d5.plannedVerification,
+      })
+    },
+    [d2, d5.plannedVerification, generateD5, language, onChangeD5],
+  )
+
   /**
    * When user edits a Why field and clicks "Regenerate from here":
    * 1. Grammar-correct the edited Why text via AI chain completion
@@ -404,22 +444,64 @@ export function Step4Form({
 
       const result = await completeChain(input, language)
 
-      // 2. Build updated chain with grammar-corrected text and generated subsequent Whys
+      // 2. Build updated chain with grammar-corrected text and generated subsequent Whys.
+      // Preserve existing values if AI returns fewer new items than expected.
       const updatedChain = { ...chain }
       if (result.success && result.data) {
-        updatedChain[whyKey] = result.data.improvedCurrentWhy as never
+        if (result.data.improvedCurrentWhy.trim()) {
+          updatedChain[whyKey] = result.data.improvedCurrentWhy as never
+        }
         let answerIndex = 0
         for (let i = whyNumber + 1; i <= 5; i++) {
           const k = `why${i}` as keyof FiveWhyChain
-          updatedChain[k] = (result.data.subsequentWhys[answerIndex] || '') as never
+          const generatedWhy = result.data.subsequentWhys[answerIndex]?.trim()
+          if (generatedWhy) {
+            updatedChain[k] = generatedWhy as never
+          }
           answerIndex++
         }
-        updatedChain.rootCause = result.data.rootCause
+        if (result.data.rootCause.trim()) {
+          updatedChain.rootCause = result.data.rootCause
+        }
       }
 
-      handleD4Change({ ...d4, [chainType]: updatedChain })
+      const nextD4: D4RootCause = {
+        ...d4,
+        [chainType]: updatedChain,
+      }
+
+      // Keep systemic traceability aligned with technical-chain root causes.
+      if (chainType === 'tua' && updatedChain.rootCause.trim()) {
+        const shouldRefreshSuaCause =
+          !nextD4.sua.cause.trim() || nextD4.sua.derivedFrom.trim() === chain.rootCause.trim()
+        nextD4.sua = {
+          ...nextD4.sua,
+          cause: shouldRefreshSuaCause
+            ? language === 'de'
+              ? `Systemabsicherung fuer "${updatedChain.rootCause}" fehlt.`
+              : `System controls are missing to prevent "${updatedChain.rootCause}".`
+            : nextD4.sua.cause,
+          derivedFrom: updatedChain.rootCause,
+        }
+      }
+      if (chainType === 'tun' && updatedChain.rootCause.trim()) {
+        const shouldRefreshSunCause =
+          !nextD4.sun.cause.trim() || nextD4.sun.derivedFrom.trim() === chain.rootCause.trim()
+        nextD4.sun = {
+          ...nextD4.sun,
+          cause: shouldRefreshSunCause
+            ? language === 'de'
+              ? `Systemabsicherung fuer "${updatedChain.rootCause}" in der Fehlererkennung fehlt.`
+              : `System controls are missing to detect "${updatedChain.rootCause}".`
+            : nextD4.sun.cause,
+          derivedFrom: updatedChain.rootCause,
+        }
+      }
+
+      handleD4Change(nextD4)
+      await regenerateD5FromD4(nextD4)
     },
-    [d4, d2, language, completeChain, handleD4Change],
+    [d4, d2, language, completeChain, handleD4Change, regenerateD5FromD4],
   )
 
   return (
@@ -455,6 +537,7 @@ export function Step4Form({
         }
         retryDisabled={genLoading}
       />
+      <AIErrorAlert error={d5RegenError} />
 
       {/* D4 — Root Cause 5-Why */}
       <Card>
@@ -473,7 +556,7 @@ export function Step4Form({
                   size="sm"
                   className="h-7 text-xs"
                   onClick={handleRegenerate}
-                  disabled={genLoading || !canRegenerate}
+                  disabled={genLoading || d5RegenLoading || !canRegenerate}
                 >
                   <RotateCcw className="mr-1 h-3 w-3" />
                   {t('regenerate')}
@@ -504,7 +587,7 @@ export function Step4Form({
               rootCauseError={rootCauseErr(d4.tua.rootCause)}
               whyError={whyErr}
               onRegenerateFrom={(n) => handleRegenerateFromWhy('tua', n)}
-              regenLoading={chainLoading}
+              regenLoading={chainLoading || d5RegenLoading}
             />
           </TemplateSection>
 
@@ -524,7 +607,7 @@ export function Step4Form({
               rootCauseError={rootCauseErr(d4.tun.rootCause)}
               whyError={whyErr}
               onRegenerateFrom={(n) => handleRegenerateFromWhy('tun', n)}
-              regenLoading={chainLoading}
+              regenLoading={chainLoading || d5RegenLoading}
             />
           </TemplateSection>
 
@@ -548,9 +631,6 @@ export function Step4Form({
           </TemplateSection>
         </CardContent>
       </Card>
-
-      {/* Consistency check results */}
-      <ConsistencyAlert result={consistencyResult} loading={consistencyLoading} />
 
       {/* D5 — Corrective Actions */}
       <Card>
@@ -672,6 +752,9 @@ export function Step4Form({
           </TemplateSection>
         </CardContent>
       </Card>
+
+      {/* Consistency check results */}
+      <ConsistencyAlert result={consistencyResult} loading={consistencyLoading} />
 
       <StepNavigation
         onBack={onBack}

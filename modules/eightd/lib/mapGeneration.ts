@@ -6,7 +6,7 @@
  */
 
 import type { D3Containment, D4RootCause, D5Actions } from '../types/report'
-import type { GenerationResult } from '../types/ai'
+import type { GenerationResult, GenerationD5Result } from '../types/ai'
 
 export interface MappedGeneration {
   d3: D3Containment
@@ -59,6 +59,26 @@ export interface MapGenerationOptions {
   complaintDate?: string
 }
 
+/** Map phase-2 D5-only AI output to the form's D5 structure. */
+export function mapGenerationD5ToFormData(gen: GenerationD5Result): D5Actions {
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    actions: gen.d5.actions.map((a: any) => ({
+      id: a.id,
+      action: a.action + (a.notes ? ` — ${a.notes}` : ''),
+      relatedRootCause: a.linkedCauseText,
+      linkedCauseType: a.linkedCauseType,
+      linkedCauseCode: a.linkedCauseCode ?? '',
+      actionCategory: a.actionCategory,
+      responsible: a.responsible,
+      targetDate: a.targetDate,
+      verificationMethod: a.verificationMethod,
+      notes: a.notes,
+    })),
+    plannedVerification: '',
+  }
+}
+
 /**
  * Convert a full AI `GenerationResult` into the report form structures.
  *
@@ -96,20 +116,7 @@ export function mapGenerationToFormData(
   }
 
   const d5: D5Actions = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    actions: gen.d5.actions.map((a: any) => ({
-      id: a.id,
-      action: a.action + (a.notes ? ` — ${a.notes}` : ''),
-      relatedRootCause: a.linkedCauseText,
-      linkedCauseType: a.linkedCauseType,
-      linkedCauseCode: a.linkedCauseCode ?? '',
-      actionCategory: a.actionCategory,
-      responsible: a.responsible,
-      targetDate: a.targetDate,
-      verificationMethod: a.verificationMethod,
-      notes: a.notes,
-    })),
-    plannedVerification: '',
+    ...mapGenerationD5ToFormData({ d5: gen.d5 }),
   }
 
   return { d3, d4, d5 }

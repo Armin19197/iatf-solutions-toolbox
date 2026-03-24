@@ -236,45 +236,49 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
               }
             />
 
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 lg:grid-cols-2">
               <FormField
-                type="input"
+                type="textarea"
                 id="d2-where"
                 label={t('where')}
                 placeholder={t('wherePh')}
+                rows={2}
                 value={data.where}
                 onChange={(v) => update('where', v)}
-                className="space-y-1.5 xl:col-span-1"
+                className="space-y-1.5"
                 error={fieldError(data.where, 3)}
               />
               <FormField
-                type="input"
+                type="textarea"
                 id="d2-when"
                 label={t('when')}
                 placeholder={t('whenPh')}
+                rows={2}
                 value={data.when}
                 onChange={(v) => update('when', v)}
-                className="space-y-1.5 xl:col-span-1"
+                className="space-y-1.5"
                 error={fieldError(data.when, 3)}
               />
               <FormField
-                type="input"
+                type="textarea"
                 id="d2-howMany"
                 label={t('howMany')}
                 placeholder={t('howManyPh')}
+                rows={2}
                 value={data.howMany}
                 onChange={(v) => update('howMany', v)}
-                className="space-y-1.5 xl:col-span-1"
+                className="space-y-1.5"
                 error={reqErr(data.howMany)}
               />
               <FormField
-                type="input"
+                type="textarea"
                 id="d2-detection"
                 label={t('detection')}
                 placeholder={t('detectionPh')}
+                rows={2}
                 value={data.detectionMethod}
                 onChange={(v) => update('detectionMethod', v)}
-                className="space-y-1.5 xl:col-span-1"
+                className="space-y-1.5"
                 error={fieldError(data.detectionMethod, 3)}
               />
             </div>
