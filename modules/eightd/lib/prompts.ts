@@ -282,6 +282,7 @@ Each Why MUST logically build upon the answer of the previous Why:
 
 The answer to the final Why represents the root cause.
 The root cause MUST be reformulated using correct grammar as a clear statement.
+Each Why field must contain ONLY the answer statement, not the question text.
 
 Example TUA chain:
   Why 1: Why is the machine leaking? → Because a seal is leaking.
@@ -618,6 +619,7 @@ Each Why MUST logically build upon the answer of the previous Why:
 
 The answer to the final Why represents the root cause.
 The root cause MUST be reformulated using correct grammar as a clear statement.
+Each Why field must contain ONLY the answer statement, not the question text.
 
 Example TUA chain:
   Why 1: Why is the machine leaking? → Because a seal is leaking.
@@ -1006,6 +1008,8 @@ You are completing a partial 5-Why root cause analysis chain. The user has edite
 CRITICAL 5-WHY CHAINING RULE:
 Each Why MUST logically build upon the answer of the previous Why.
 For example, Why 2 asks why Reason 1 happened.
+Each Why field must contain ONLY the answer statement.
+Do NOT repeat the question text inside the value.
 
 Respond in ${lang}.
 ${JSON_ONLY_INSTRUCTION}
@@ -1013,7 +1017,7 @@ ${JSON_ONLY_INSTRUCTION}
 Required JSON schema:
 {
   "improvedCurrentWhy": "string - grammar corrected version of the user's input",
-  "subsequentWhys": ["string - exactly enough answers to complete 5 Whys. E.g., if user edited Why 2, provide array of 3 strings for Why 3, 4, 5"],
+  "subsequentWhys": ["string - exactly enough answer-only values to complete 5 Whys. Return an empty array if the user edited Why 5."],
   "rootCause": "string - the final root cause statement"
 }`
 }
@@ -1033,5 +1037,6 @@ ${input.context.previousWhys.map((w, i) => `Why ${i + 1}: ${w}`).join('\\n')}
 User's edited Why ${input.whyNumber}:
 "${input.currentWhy}"
 
-Please correct the grammar of Why ${input.whyNumber}, and generate the remaining ${missingCount} subsequent Whys logically, ending with a final root cause.`
+Please correct the grammar of Why ${input.whyNumber}, generate the remaining ${missingCount} subsequent Whys logically, and end with a final root cause.
+If there are 0 remaining Whys, return an empty subsequentWhys array.`
 }

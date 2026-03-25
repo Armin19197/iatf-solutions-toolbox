@@ -38,6 +38,21 @@ function fill(color: string): ExcelJS.Fill {
   return { type: 'pattern', pattern: 'solid', fgColor: { argb: color } }
 }
 
+function estimateWrappedLines(value: string, span: number) {
+  const text = (value || '').toString()
+  if (!text) return 1
+
+  const charsPerLine = Math.max(14, span * 14)
+  return text
+    .split(/\r?\n/)
+    .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / charsPerLine)), 0)
+}
+
+function ensureRowHeight(ws: ExcelJS.Worksheet, row: number, requiredHeight: number) {
+  const existingHeight = ws.getRow(row).height ?? 15
+  ws.getRow(row).height = Math.max(existingHeight, requiredHeight)
+}
+
 /** Add a full-width section header (D0, D1, etc.) */
 function sectionHeader(ws: ExcelJS.Worksheet, row: number, text: string) {
   ws.getRow(row).height = 26
@@ -74,6 +89,15 @@ function kvPair(
 ) {
   if (c1 !== c2) merge(ws, row, c1, c1) // single cell for label
   merge(ws, row, c2, c3)
+
+  const labelLines = estimateWrappedLines(label, 1)
+  const valueLines = estimateWrappedLines(value || '—', Math.max(1, c3 - c2 + 1))
+  ensureRowHeight(
+    ws,
+    row,
+    Math.min(140, Math.max(18, 18 * Math.max(labelLines, valueLines))),
+  )
+
   const labelCell = ws.getCell(row, c1)
   labelCell.value = label
   labelCell.font = { bold: true, size: 9, color: { argb: DARK_GRAY } }
@@ -123,7 +147,7 @@ function tableRow(
     maxEstimatedLines = Math.max(maxEstimatedLines, estimatedLines)
   }
 
-  ws.getRow(row).height = Math.max(minHeight, Math.min(120, 16 * maxEstimatedLines))
+  ws.getRow(row).height = Math.max(minHeight, Math.min(140, 18 * maxEstimatedLines))
   for (const c of cells) {
     if (c.col !== c.endCol) merge(ws, row, c.col, c.endCol)
     const cell = ws.getCell(row, c.col)
@@ -268,9 +292,9 @@ function build8DReport(wb: ExcelJS.Workbook, r: ReportData, isDE: boolean) {
   // IS / IS NOT table
   ws.getRow(row).height = 20
   tableHeader(ws, row, [
-    { col: 1, endCol: 1, text: isDE ? 'IS / IS-NICHT Analyse' : 'IS / IS NOT Analysis' },
-    { col: 2, endCol: 5, text: isDE ? 'IS  (Bestätigt)' : 'IS  (Confirmed)' },
-    { col: 6, endCol: 9, text: isDE ? 'IS NICHT  (Ausgeschlossen)' : 'IS NOT  (Excluded)' },
+    { col: 1, endCol: 1, text: isDE ? 'IST / IST-NICHT Analyse' : 'IS / IS NOT Analysis' },
+    { col: 2, endCol: 5, text: isDE ? 'IST  (Bestätigt)' : 'IS  (Confirmed)' },
+    { col: 6, endCol: 9, text: isDE ? 'IST NICHT  (Ausgeschlossen)' : 'IS NOT  (Excluded)' },
   ])
   row++
 

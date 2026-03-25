@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -30,6 +29,8 @@ interface AIAssistFieldProps {
   extra?: React.ReactNode
   /** Validation error message to display below the field */
   error?: string
+  /** Optional override for the assist button label */
+  assistLabel?: string
 }
 
 export function AIAssistField({
@@ -48,6 +49,7 @@ export function AIAssistField({
   activeAssistField,
   extra,
   error,
+  assistLabel,
 }: AIAssistFieldProps) {
   const tAi = useTranslations('ai')
   const isActiveField = activeAssistField === fieldName
@@ -68,7 +70,7 @@ export function AIAssistField({
           ) : (
             <Sparkles className="mr-1 h-3 w-3" />
           )}
-          {tAi('assist.btn')}
+          {assistLabel ?? tAi('assist.btn')}
         </Button>
       </div>
 

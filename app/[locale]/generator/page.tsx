@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { useAutosave } from '@/modules/eightd/hooks/useAutosave'
 import { Step1Form } from '@/modules/eightd/components/steps/Step1Form'
 import { Step2Form } from '@/modules/eightd/components/steps/Step2Form'
@@ -9,16 +10,46 @@ import { Step4Form } from '@/modules/eightd/components/steps/Step4Form'
 import { Step5Form } from '@/modules/eightd/components/steps/Step5Form'
 import { PreviewScreen } from '@/modules/eightd/components/steps/PreviewScreen'
 import { ExportScreen } from '@/modules/eightd/components/steps/ExportScreen'
+import { GenerationErrorAlert } from '@/modules/eightd/components/shared/AIAlertFeedback'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { LanguageToggle } from '@/components/language-toggle'
 import { useFormState } from '@/modules/eightd/hooks/useFormState'
+import { useReportTranslation } from '@/modules/eightd/hooks/useAI'
+import type { Language, ReportData } from '@/modules/eightd/types/report'
 import { useTranslations, useLocale } from 'next-intl'
+
+function isSupportedLocale(locale: string): locale is Language {
+  return locale === 'de' || locale === 'en'
+}
+
+function hasReportContent(value: unknown, path: string[] = []): boolean {
+  if (typeof value === 'string') {
+    return path[0] !== 'language' && value.trim().length > 0
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((item) => hasReportContent(item, path))
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>).some(([key, nested]) =>
+      hasReportContent(nested, [...path, key]),
+    )
+  }
+
+  return false
+}
+
+function buildLocaleSyncKey(report: ReportData, targetLanguage: Language): string {
+  return `${report.language}->${targetLanguage}:${JSON.stringify(report)}`
+}
 
 export default function GeneratorPage() {
   const locale = useLocale()
   const {
     report,
+    hydrated,
     currentStep,
     stepIndex,
     totalSteps,
@@ -30,16 +61,76 @@ export default function GeneratorPage() {
     resetReport,
   } = useFormState()
   useAutosave(report)
+  const {
+    translateReport,
+    error: reportTranslationError,
+    clear: clearReportTranslation,
+  } = useReportTranslation()
   const t = useTranslations('step')
   const tApp = useTranslations('app')
+  const activeTranslationKey = useRef<string | null>(null)
+  const [failedTranslationKey, setFailedTranslationKey] = useState<string | null>(null)
+  const reportHasContent = hasReportContent(report)
 
-  // Sync report.language with the active next-intl locale so AI prompts
-  // and exports always use the language the user has selected in the UI.
   useEffect(() => {
-    if (locale === 'de' || locale === 'en') {
-      setLanguage(locale)
+    if (!hydrated || !isSupportedLocale(locale)) return
+
+    if (report.language === locale) {
+      activeTranslationKey.current = null
+      return
     }
-  }, [locale, setLanguage])
+
+    if (!reportHasContent) {
+      setLanguage(locale)
+      return
+    }
+
+    const requestKey = buildLocaleSyncKey(report, locale)
+    if (
+      activeTranslationKey.current === requestKey ||
+      failedTranslationKey === requestKey
+    ) {
+      return
+    }
+
+    activeTranslationKey.current = requestKey
+    clearReportTranslation()
+
+    let cancelled = false
+
+    void (async () => {
+      const result = await translateReport({
+        report,
+        targetLanguage: locale,
+      })
+
+      if (cancelled) return
+
+      activeTranslationKey.current = null
+
+      if (result.success) {
+        setFailedTranslationKey(null)
+        mergeReport(result.data)
+        return
+      }
+
+      setFailedTranslationKey(requestKey)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    clearReportTranslation,
+    hydrated,
+    locale,
+    mergeReport,
+    report,
+    reportHasContent,
+    failedTranslationKey,
+    setLanguage,
+    translateReport,
+  ])
 
   // Scroll to the top of the page whenever the user navigates to a new step
   useEffect(() => {
@@ -49,6 +140,16 @@ export default function GeneratorPage() {
   }, [currentStep])
 
   const progressPct = Math.round(((stepIndex + 1) / totalSteps) * 100)
+  const localeSyncKey =
+    hydrated &&
+    isSupportedLocale(locale) &&
+    report.language !== locale &&
+    reportHasContent
+      ? buildLocaleSyncKey(report, locale)
+      : null
+  const showLocaleSyncLoading =
+    !hydrated ||
+    (localeSyncKey !== null && failedTranslationKey !== localeSyncKey)
 
   function renderStep() {
     switch (currentStep) {
@@ -80,9 +181,11 @@ export default function GeneratorPage() {
           <Step3Form
             data={report.d3}
             complaintDate={report.metadata.complaintDate}
+            problemContext={report.d2}
             onChange={(d) => updateReport('d3', d)}
             onNext={nextStep}
             onBack={prevStep}
+            language={report.language}
           />
         )
       case 'step4':
@@ -129,6 +232,19 @@ export default function GeneratorPage() {
     }
   }
 
+  if (showLocaleSyncLoading) {
+    return (
+      <main className="min-h-screen bg-neutral-50">
+        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4">
+          <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-600 shadow-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>{hydrated ? tApp('translatingReport') : tApp('restoringDraft')}</span>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-neutral-50">
       {/* Header */}
@@ -170,7 +286,10 @@ export default function GeneratorPage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-4xl px-4 py-8">{renderStep()}</div>
+      <div className="mx-auto max-w-4xl space-y-4 px-4 py-8">
+        <GenerationErrorAlert error={localeSyncKey !== null ? reportTranslationError : null} />
+        {renderStep()}
+      </div>
     </main>
   )
 }

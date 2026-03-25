@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import type { ReportData, FormStep, Language } from '../types/report'
 import { EMPTY_REPORT } from '../types/report'
 import { STORAGE_KEY, STEP_KEY } from '../lib/constants'
+import { normalizeFiveWhyChain } from '../lib/aiTransforms'
 
 const STEP_ORDER: FormStep[] = [
   'step1',   // Metadata + D1 Team
@@ -94,8 +95,14 @@ function normalizeSavedReport(value: unknown): ReportData {
     d4: {
       ...EMPTY_REPORT.d4,
       ...d4,
-      tua: { ...EMPTY_REPORT.d4.tua, ...asRecord(d4.tua) },
-      tun: { ...EMPTY_REPORT.d4.tun, ...asRecord(d4.tun) },
+      tua: normalizeFiveWhyChain({
+        ...EMPTY_REPORT.d4.tua,
+        ...asRecord(d4.tua),
+      } as ReportData['d4']['tua']),
+      tun: normalizeFiveWhyChain({
+        ...EMPTY_REPORT.d4.tun,
+        ...asRecord(d4.tun),
+      } as ReportData['d4']['tun']),
       sua: { ...EMPTY_REPORT.d4.sua, ...asRecord(d4.sua) },
       sun: { ...EMPTY_REPORT.d4.sun, ...asRecord(d4.sun) },
     },
@@ -123,20 +130,23 @@ export function useFormState() {
   // hydration mismatches.  localStorage is read inside a one-time useEffect.
   const [report, setReport] = useState<ReportData>(EMPTY_REPORT)
   const [currentStep, setCurrentStep] = useState<FormStep>('step1')
-  const hydrated = useRef(false)
+  const [hydrated, setHydrated] = useState(false)
+  const didHydrate = useRef(false)
 
   // Hydrate from localStorage AFTER the first client render so the server-
   // rendered HTML always matches the initial client HTML.
   useEffect(() => {
-    if (hydrated.current) return
-    hydrated.current = true
+    if (didHydrate.current) return
+    didHydrate.current = true
+
+    let nextReport: ReportData | null = null
+    let nextStep: FormStep | null = null
 
     try {
       const savedReport = localStorage.getItem(STORAGE_KEY)
       if (savedReport) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         const parsed = deobfuscate(savedReport)
-        if (parsed) setReport(normalizeSavedReport(parsed))
+        if (parsed) nextReport = normalizeSavedReport(parsed)
       }
     } catch { /* localStorage unavailable */ }
 
@@ -150,10 +160,16 @@ export function useFormState() {
           stepStr = savedStep
         }
         if (STEP_ORDER.includes(stepStr as FormStep)) {
-          setCurrentStep(stepStr as FormStep)
+          nextStep = stepStr as FormStep
         }
       }
     } catch { /* localStorage unavailable */ }
+
+    queueMicrotask(() => {
+      if (nextReport) setReport(nextReport)
+      if (nextStep) setCurrentStep(nextStep)
+      setHydrated(true)
+    })
   }, [])
 
   const persist = useCallback((data: ReportData) => {
@@ -234,6 +250,7 @@ export function useFormState() {
 
   return {
     report,
+    hydrated,
     currentStep,
     stepIndex,
     totalSteps,

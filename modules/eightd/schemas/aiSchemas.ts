@@ -8,6 +8,36 @@ export const assistResultSchema = z.object({
   suggestions: z.array(z.string()),
 })
 
+// ─── AI Output: Complaint Extraction ─────────────────────────────────────────
+
+const complaintIsIsNotSchema = z.object({
+  what: z.string(),
+  where: z.string(),
+  when: z.string(),
+  howMany: z.string(),
+})
+
+export const complaintExtractionResultSchema = z.object({
+  what: z.string(),
+  where: z.string(),
+  when: z.string(),
+  howMany: z.string(),
+  detectionMethod: z.string(),
+  how: z.string(),
+  whyProblem: z.string(),
+  quantitativeDeviation: z.string(),
+  qualitativeDescription: z.string(),
+  customerImpact: z.string(),
+  isAnalysis: complaintIsIsNotSchema,
+  isNotAnalysis: complaintIsIsNotSchema,
+})
+
+// ─── AI Output: Text Translation ─────────────────────────────────────────────
+
+export const textTranslationResultSchema = z.object({
+  translatedText: z.string(),
+})
+
 // ─── AI Output: Sufficiency Check ────────────────────────────────────────────
 
 export const sufficiencyResultSchema = z.object({
@@ -178,6 +208,6 @@ export const consistencyResultSchema = z.object({
 
 export const chainCompletionResultSchema = z.object({
   improvedCurrentWhy: z.string(),
-  subsequentWhys: z.array(z.string()).min(1).max(4),
+  subsequentWhys: z.array(z.string()).min(0).max(4),
   rootCause: z.string()
 })

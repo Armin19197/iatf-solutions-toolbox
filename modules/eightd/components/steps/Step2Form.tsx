@@ -3,12 +3,20 @@
 import { useState } from 'react'
 import type { D2Problem, D1Team, Metadata, D3Containment, D4RootCause, D5Actions } from '@/modules/eightd/types/report'
 import { useTranslations } from 'next-intl'
+import { Loader2, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { useSufficiencyCheck, useFieldAssist, useGeneration } from '@/modules/eightd/hooks/useAI'
+import {
+  useSufficiencyCheck,
+  useFieldAssist,
+  useGeneration,
+  useComplaintExtraction,
+} from '@/modules/eightd/hooks/useAI'
 import type { SufficiencyInput, AssistInput, GenerationInput } from '@/modules/eightd/types/ai'
 import { mapGenerationToFormData } from '@/modules/eightd/lib/mapGeneration'
 import { buildGenerationInput } from '@/modules/eightd/lib/buildGenerationInput'
+import { applyComplaintExtraction } from '@/modules/eightd/lib/aiTransforms'
 import { TemplateSection } from '@/modules/eightd/components/steps/TemplateSection'
 import { FormField } from '@/modules/eightd/components/shared/FormField'
 import { StepCardHeader } from '@/modules/eightd/components/shared/StepCardHeader'
@@ -46,6 +54,12 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
     result: assistResult,
     clear: clearAssist,
   } = useFieldAssist()
+  const {
+    extract,
+    loading: extractLoading,
+    error: extractError,
+    clear: clearExtraction,
+  } = useComplaintExtraction()
   const { generate, getCached, loading: genLoading, loadingPhase } = useGeneration()
   const [assistField, setAssistField] = useState<string | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
@@ -159,6 +173,20 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
     setAssistField(null)
   }
 
+  const handleExtractComplaint = async () => {
+    if (!data.customerComplaintText.trim()) return
+
+    clearExtraction()
+    const result = await extract(
+      { customerComplaintText: data.customerComplaintText },
+      language,
+    )
+
+    if (result.success) {
+      onChange(applyComplaintExtraction(data, result.data))
+    }
+  }
+
   const updateIsEntry = (
     dim: keyof D2Problem['isAnalysis'],
     kind: 'is' | 'isNot',
@@ -181,6 +209,9 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
     onChange({ ...data, isAnalysis: nextIs, isNotAnalysis: nextIsNot })
   }
 
+  const complaintToolsError = extractError
+  const complaintToolsLoading = extractLoading
+
   return (
     <div className="space-y-6">
       <Card>
@@ -199,6 +230,24 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
               rows={4}
               value={data.customerComplaintText}
               onChange={(v) => update('customerComplaintText', v)}
+              extra={
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExtractComplaint}
+                    disabled={!data.customerComplaintText.trim() || complaintToolsLoading}
+                  >
+                    {extractLoading ? (
+                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-1 h-3.5 w-3.5" />
+                    )}
+                    {extractLoading ? t('extractingComplaint') : t('extractComplaint')}
+                  </Button>
+                </div>
+              }
             />
           </TemplateSection>
 
@@ -426,6 +475,7 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
       </Card>
 
       {/* AI feedback alerts */}
+      <GenerationErrorAlert error={complaintToolsError} />
       <SufficiencyAlert result={suffResult} />
       <GenerationErrorAlert error={genError} />
 

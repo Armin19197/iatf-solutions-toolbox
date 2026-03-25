@@ -7,6 +7,7 @@
 
 import type { D3Containment, D4RootCause, D5Actions } from '../types/report'
 import type { GenerationResult, GenerationD5Result } from '../types/ai'
+import { normalizeFiveWhyChain } from './aiTransforms'
 
 export interface MappedGeneration {
   d3: D3Containment
@@ -32,7 +33,7 @@ function getNextDay(dateStr: string): string {
 
 /** Map a 5-Why chain from AI output to the form's FiveWhyChain shape. */
 function mapFiveWhy(chain: GenerationResult['d4']['tua']) {
-  return {
+  return normalizeFiveWhyChain({
     why1: chain.why1,
     why2: chain.why2,
     why3: chain.why3,
@@ -42,7 +43,7 @@ function mapFiveWhy(chain: GenerationResult['d4']['tua']) {
     possibleCause: chain.possibleCause,
     rootCauseCode: chain.rootCauseCode ?? '',
     causeDomain: chain.causeDomain ?? '',
-  }
+  })
 }
 
 /** Map a systemic cause from AI output to the form's SystemicCause shape. */

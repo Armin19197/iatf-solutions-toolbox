@@ -2,7 +2,9 @@
   "app": {
     "brand": "IATF Solutions",
     "title": "8D-Berichtsgenerator",
-    "stepOf": "Schritt {current} von {total}"
+    "stepOf": "Schritt {current} von {total}",
+    "restoringDraft": "Gespeicherter Entwurf wird wiederhergestellt...",
+    "translatingReport": "Bericht wird in die ausgewählte Sprache übersetzt..."
   },
   "landing": {
     "nav": {
@@ -207,6 +209,11 @@
     "customerImpactPh": "Erkläre die Auswirkung auf Kunde oder Folgeprozess",
     "complaint": "Kundenbeanstandungstext",
     "complaintPh": "Originaltext der Kundenbeanstandung einfügen (optional)",
+    "extractComplaint": "D2-Felder extrahieren",
+    "extractingComplaint": "Wird extrahiert...",
+    "translateToEnglish": "Ins Englische übersetzen",
+    "translateToGerman": "Ins Deutsche übersetzen",
+    "translatingComplaint": "Wird übersetzt...",
     "notes": "Zusätzliche Hinweise",
     "notesPh": "Weitere relevante Informationen (optional)",
     "isIsNotTitle": "IST / IST-Nicht-Analyse",

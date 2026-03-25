@@ -18,6 +18,8 @@ import type {
   AIApiResponse,
   AssistInput,
   AssistResult,
+  ComplaintExtractionInput,
+  ComplaintExtractionResult,
   SufficiencyInput,
   SufficiencyResult,
   GenerationInput,
@@ -29,6 +31,10 @@ import type {
   ConsistencyResult,
   ChainCompletionInput,
   ChainCompletionResult,
+  ReportTranslationInput,
+  ReportTranslationResult,
+  TextTranslationInput,
+  TextTranslationResult,
 } from '../types/ai'
 import {
   MAX_REGENERATIONS,
@@ -189,6 +195,111 @@ export function useFieldAssist() {
   }, [])
 
   return { assist, loading, error, result, clear }
+}
+
+// ─── useComplaintExtraction ──────────────────────────────────────────────────
+
+export function useComplaintExtraction() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<ComplaintExtractionResult | null>(null)
+
+  const extract = useCallback(
+    async (input: ComplaintExtractionInput, language: 'en' | 'de') => {
+      setLoading(true)
+      setError(null)
+      setResult(null)
+
+      const res = await callAI<ComplaintExtractionResult>('complaintExtraction', language, input)
+
+      setLoading(false)
+      if (res.success) {
+        setResult(res.data)
+      } else {
+        setError(res.error)
+      }
+
+      return res
+    },
+    [],
+  )
+
+  const clear = useCallback(() => {
+    setResult(null)
+    setError(null)
+  }, [])
+
+  return { extract, loading, error, result, clear }
+}
+
+// ─── useTextTranslation ──────────────────────────────────────────────────────
+
+export function useTextTranslation() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<TextTranslationResult | null>(null)
+
+  const translate = useCallback(
+    async (input: TextTranslationInput) => {
+      setLoading(true)
+      setError(null)
+      setResult(null)
+
+      const res = await callAI<TextTranslationResult>('textTranslation', input.targetLanguage, input)
+
+      setLoading(false)
+      if (res.success) {
+        setResult(res.data)
+      } else {
+        setError(res.error)
+      }
+
+      return res
+    },
+    [],
+  )
+
+  const clear = useCallback(() => {
+    setResult(null)
+    setError(null)
+  }, [])
+
+  return { translate, loading, error, result, clear }
+}
+
+// ─── useReportTranslation ────────────────────────────────────────────────────
+
+export function useReportTranslation() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<ReportTranslationResult | null>(null)
+
+  const translateReport = useCallback(
+    async (input: ReportTranslationInput) => {
+      setLoading(true)
+      setError(null)
+      setResult(null)
+
+      const res = await callAI<ReportTranslationResult>('reportTranslation', input.targetLanguage, input)
+
+      setLoading(false)
+      if (res.success) {
+        setResult(res.data)
+      } else {
+        setError(res.error)
+      }
+
+      return res
+    },
+    [],
+  )
+
+  const clear = useCallback(() => {
+    setResult(null)
+    setError(null)
+  }, [])
+
+  return { translateReport, loading, error, result, clear }
 }
 
 // ─── useSufficiencyCheck ─────────────────────────────────────────────────────

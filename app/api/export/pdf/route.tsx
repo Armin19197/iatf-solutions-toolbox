@@ -173,7 +173,9 @@ function EightDDocument({ report, lang }: { report: ReportData; lang: 'en' | 'de
   const { metadata, d1, d2, d3, d4, d5, d6, d7, d8 } = report
   const labels = getExportLabels(lang)
 
-  const whyLabels = ['Why 1', 'Why 2', 'Why 3', 'Why 4', 'Why 5']
+  const whyLabels = isDE
+    ? ['Warum 1', 'Warum 2', 'Warum 3', 'Warum 4', 'Warum 5']
+    : ['Why 1', 'Why 2', 'Why 3', 'Why 4', 'Why 5']
 
   return (
     <Document title={`8D Report - ${metadata.reportId}`} author="IATF Solutions">
@@ -367,28 +369,34 @@ function EightDDocument({ report, lang }: { report: ReportData; lang: 'en' | 'de
             label={labels.processDoc}
             value={[
               `FMEA: ${d7.fmea.actionRequired}`,
-              `Control Plan: ${d7.controlPlan.actionRequired}`,
-              `Work Instructions: ${d7.workInstructions.actionRequired}`,
-              `Test/Inspection Plan: ${d7.testInspectionPlan.actionRequired}`,
-              `Other: ${d7.otherDocuments.actionRequired}`,
+              `${isDE ? 'Kontrollplan' : 'Control Plan'}: ${d7.controlPlan.actionRequired}`,
+              `${isDE ? 'Arbeitsanweisungen' : 'Work Instructions'}: ${d7.workInstructions.actionRequired}`,
+              `${isDE ? 'Prüf-/Inspektionsplan' : 'Test/Inspection Plan'}: ${d7.testInspectionPlan.actionRequired}`,
+              `${isDE ? 'Sonstige' : 'Other'}: ${d7.otherDocuments.actionRequired}`,
             ].join('\n')}
           />
           <Field
             label={labels.training}
             value={[
-              `FMEA Resp: ${d7.fmea.responsible} (${d7.fmea.dueDate})`,
-              `Control Plan Resp: ${d7.controlPlan.responsible} (${d7.controlPlan.dueDate})`,
-              `Work Instructions Resp: ${d7.workInstructions.responsible} (${d7.workInstructions.dueDate})`,
-              `Test Plan Resp: ${d7.testInspectionPlan.responsible} (${d7.testInspectionPlan.dueDate})`,
-              `Other Resp: ${d7.otherDocuments.responsible} (${d7.otherDocuments.dueDate})`,
+              `FMEA ${isDE ? 'Verantw.' : 'Resp'}: ${d7.fmea.responsible} (${d7.fmea.dueDate})`,
+              `${isDE ? 'Kontrollplan' : 'Control Plan'} ${isDE ? 'Verantw.' : 'Resp'}: ${d7.controlPlan.responsible} (${d7.controlPlan.dueDate})`,
+              `${isDE ? 'Arbeitsanweisungen' : 'Work Instructions'} ${isDE ? 'Verantw.' : 'Resp'}: ${d7.workInstructions.responsible} (${d7.workInstructions.dueDate})`,
+              `${isDE ? 'Prüfplan' : 'Test Plan'} ${isDE ? 'Verantw.' : 'Resp'}: ${d7.testInspectionPlan.responsible} (${d7.testInspectionPlan.dueDate})`,
+              `${isDE ? 'Sonstige' : 'Other'} ${isDE ? 'Verantw.' : 'Resp'}: ${d7.otherDocuments.responsible} (${d7.otherDocuments.dueDate})`,
             ].join('\n')}
           />
         </View>
 
         <View style={S.section}>
           <SectionHeader title={labels.closure} />
-          <Field label={labels.custApproval} value={`${d8.customerApproval}${d8.customerSignOff ? ` | Sign-off: ${d8.customerSignOff}` : ''}`} />
-          <Field label={labels.closureDate} value={`${d8.closureDate}${d8.signOffDate ? ` | Sign-off Date: ${d8.signOffDate}` : ''}`} />
+          <Field
+            label={labels.custApproval}
+            value={`${d8.customerApproval}${d8.customerSignOff ? ` | ${isDE ? 'Kundenabnahme' : 'Sign-off'}: ${d8.customerSignOff}` : ''}`}
+          />
+          <Field
+            label={labels.closureDate}
+            value={`${d8.closureDate}${d8.signOffDate ? ` | ${isDE ? 'Abnahmedatum' : 'Sign-off Date'}: ${d8.signOffDate}` : ''}`}
+          />
           <Field label={labels.implResp} value={d8.approvedBy} />
           <Field label={labels.lessons} value={d8.lessonsLearned} />
           <Field label={labels.recognition} value={d8.teamRecognition} />

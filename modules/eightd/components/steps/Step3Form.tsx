@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import type { D3Containment, ContainmentAction } from '@/modules/eightd/types/report'
+import type { D3Containment, ContainmentAction, D2Problem } from '@/modules/eightd/types/report'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -14,19 +14,39 @@ import {
   ActionItemHeader,
 } from '@/modules/eightd/components/shared/ActionListManager'
 import { TemplateSection } from '@/modules/eightd/components/steps/TemplateSection'
+import { AIAssistField } from '@/modules/eightd/components/shared/AIAssistField'
+import { useFieldAssist } from '@/modules/eightd/hooks/useAI'
 
 interface Step3FormProps {
   data: D3Containment
   complaintDate: string
+  problemContext: D2Problem
   onChange: (d: D3Containment) => void
   onNext: () => void
   onBack: () => void
+  language: 'en' | 'de'
 }
 
-export function Step3Form({ data, complaintDate, onChange, onNext, onBack }: Step3FormProps) {
+export function Step3Form({
+  data,
+  complaintDate,
+  problemContext,
+  onChange,
+  onNext,
+  onBack,
+  language,
+}: Step3FormProps) {
   const t = useTranslations('s3')
+  const tStep4 = useTranslations('s4')
   const tVal = useTranslations('validation')
   const [attempted, setAttempted] = useState(false)
+  const {
+    assist,
+    loading: assistLoading,
+    result: assistResult,
+    clear: clearAssist,
+  } = useFieldAssist()
+  const [assistField, setAssistField] = useState<string | null>(null)
 
   /** Compute complaint date + 1 day as default due date */
   const defaultDueDate = (() => {
@@ -88,6 +108,60 @@ export function Step3Form({ data, complaintDate, onChange, onNext, onBack }: Ste
     return undefined
   }
 
+  const handleActionAssist = async (fieldName: string, fieldValue: string) => {
+    if (!fieldValue.trim()) return
+
+    const actionId = fieldName.replace('action:', '')
+    const action = data.actions.find((entry) => entry.id === actionId)
+    if (!action) return
+
+    setAssistField(fieldName)
+    clearAssist()
+
+    const context: Record<string, string> = {
+      problemWhat: problemContext.what,
+      problemWhere: problemContext.where,
+      problemWhen: problemContext.when,
+      problemHowMany: problemContext.howMany,
+      detectionMethod: problemContext.detectionMethod,
+      scope: action.scope,
+      responsible: action.responsible,
+      riskAssessment: action.riskAssessment,
+      effectiveness: action.effectiveness,
+      notes: action.notes,
+    }
+
+    await assist(
+      {
+        fieldName: 'containmentAction',
+        fieldValue,
+        context,
+      },
+      language,
+    )
+  }
+
+  const applyActionAssist = (fieldName: string) => {
+    if (!assistResult?.improved) return
+
+    const actionId = fieldName.replace('action:', '')
+    onChange({
+      ...data,
+      actions: data.actions.map((action) =>
+        action.id === actionId
+          ? { ...action, action: assistResult.improved }
+          : action,
+      ),
+    })
+    clearAssist()
+    setAssistField(null)
+  }
+
+  const dismissActionAssist = () => {
+    clearAssist()
+    setAssistField(null)
+  }
+
 
   return (
     <div className="space-y-6">
@@ -112,14 +186,22 @@ export function Step3Form({ data, complaintDate, onChange, onNext, onBack }: Ste
                     onRemove={helpers.remove}
                   />
 
-                  <FormField
-                    type="textarea"
+                  <AIAssistField
+                    id={`d3-action-${action.id}`}
                     label={t('actionDesc')}
                     placeholder={t('actionPh')}
-                    rows={2}
+                    rows={3}
                     value={action.action}
                     onChange={(v) => helpers.updateField('action', v)}
+                    fieldName={`action:${action.id}`}
+                    onAssist={handleActionAssist}
+                    assistLoading={assistLoading}
+                    assistResult={assistResult}
+                    activeAssistField={assistField}
+                    onApply={applyActionAssist}
+                    onDismiss={dismissActionAssist}
                     error={actionErr(action.action, 3)}
+                    assistLabel={tStep4('regenerate')}
                   />
 
                   <div className="grid gap-4 lg:grid-cols-3">

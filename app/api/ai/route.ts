@@ -18,6 +18,9 @@ import { generateD3D4 } from '@/modules/eightd/lib/generateD3D4'
 import { generateD5 } from '@/modules/eightd/lib/generateD5'
 import { checkConsistency } from '@/modules/eightd/lib/consistencyCheck'
 import { completeChain } from '@/modules/eightd/lib/completeChain'
+import { extractComplaint } from '@/modules/eightd/lib/complaintExtraction'
+import { translateText } from '@/modules/eightd/lib/textTranslation'
+import { translateReport } from '@/modules/eightd/lib/reportTranslation'
 import { isAuthenticated } from '@/lib/session/session'
 import type { AIApiRequest, AIApiResponse } from '@/modules/eightd/types/ai'
 
@@ -93,6 +96,18 @@ export async function POST(req: NextRequest) {
 
       case 'chainCompletion':
         result = await completeChain(payload as Parameters<typeof completeChain>[0], language)
+        break
+
+      case 'complaintExtraction':
+        result = await extractComplaint(payload as Parameters<typeof extractComplaint>[0], language)
+        break
+
+      case 'textTranslation':
+        result = await translateText(payload as Parameters<typeof translateText>[0])
+        break
+
+      case 'reportTranslation':
+        result = await translateReport(payload as Parameters<typeof translateReport>[0])
         break
 
       default:

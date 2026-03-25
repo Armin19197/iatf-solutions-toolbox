@@ -2,7 +2,9 @@
   "app": {
     "brand": "IATF Solutions",
     "title": "8D Report Generator",
-    "stepOf": "Step {current} of {total}"
+    "stepOf": "Step {current} of {total}",
+    "restoringDraft": "Restoring saved draft...",
+    "translatingReport": "Translating report to the selected language..."
   },
   "landing": {
     "nav": {
@@ -207,6 +209,11 @@
     "customerImpactPh": "Explain the effect on the customer or next process",
     "complaint": "Customer Complaint Text",
     "complaintPh": "Paste original customer complaint text (optional)",
+    "extractComplaint": "Extract D2 Fields",
+    "extractingComplaint": "Extracting...",
+    "translateToEnglish": "Translate to English",
+    "translateToGerman": "Translate to German",
+    "translatingComplaint": "Translating...",
     "notes": "Additional Notes",
     "notesPh": "Any other relevant information (optional)",
     "isIsNotTitle": "IS / IS NOT Analysis",

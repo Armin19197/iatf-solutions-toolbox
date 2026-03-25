@@ -13,12 +13,25 @@ import type {
   generationD5ResultSchema,
   consistencyResultSchema,
   chainCompletionResultSchema,
+  complaintExtractionResultSchema,
+  textTranslationResultSchema,
 } from '../schemas/aiSchemas'
 import type { CauseType, CauseDomain } from '../lib/ontology'
+import type { ReportData } from './report'
 
 // ─── AI Call Types ────────────────────────────────────────────────────────────
 
-export type AICallType = 'assist' | 'sufficiency' | 'generation' | 'generation-d3d4' | 'generation-d5' | 'consistency' | 'chainCompletion'
+export type AICallType =
+  | 'assist'
+  | 'sufficiency'
+  | 'generation'
+  | 'generation-d3d4'
+  | 'generation-d5'
+  | 'consistency'
+  | 'chainCompletion'
+  | 'complaintExtraction'
+  | 'textTranslation'
+  | 'reportTranslation'
 
 // ─── AI Call: D1/D2 Assist ───────────────────────────────────────────────────
 
@@ -28,6 +41,32 @@ export interface AssistInput {
   fieldName: string
   fieldValue: string
   context: Record<string, string>
+}
+
+// ─── AI Call: Complaint Extraction ───────────────────────────────────────────
+
+export type ComplaintExtractionResult = z.infer<typeof complaintExtractionResultSchema>
+
+export interface ComplaintExtractionInput {
+  customerComplaintText: string
+}
+
+// ─── AI Call: Text Translation ───────────────────────────────────────────────
+
+export type TextTranslationResult = z.infer<typeof textTranslationResultSchema>
+
+export interface TextTranslationInput {
+  text: string
+  targetLanguage: 'en' | 'de'
+}
+
+// ─── AI Call: Full Report Translation ────────────────────────────────────────
+
+export type ReportTranslationResult = ReportData
+
+export interface ReportTranslationInput {
+  report: ReportData
+  targetLanguage: 'en' | 'de'
 }
 
 // ─── AI Call: Sufficiency Check ──────────────────────────────────────────────
@@ -306,11 +345,14 @@ export interface AIApiRequest {
   language: 'en' | 'de'
   payload:
     | AssistInput
+    | ComplaintExtractionInput
     | SufficiencyInput
     | GenerationInput
     | GenerationD5Input
     | ConsistencyInput
     | ChainCompletionInput
+    | TextTranslationInput
+    | ReportTranslationInput
 }
 
 export interface AIApiResponse<T = unknown> {

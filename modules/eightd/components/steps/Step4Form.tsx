@@ -24,6 +24,7 @@ import { useGeneration, useConsistencyCheck, useChainCompletion, useD5Generation
 import type { ConsistencyInput, ChainCompletionInput } from '@/modules/eightd/types/ai'
 import { mapGenerationToFormData, mapGenerationD5ToFormData } from '@/modules/eightd/lib/mapGeneration'
 import { buildGenerationInput } from '@/modules/eightd/lib/buildGenerationInput'
+import { normalizeFiveWhyChain, normalizeWhyAnswer } from '@/modules/eightd/lib/aiTransforms'
 import { cn } from '@/lib/utils'
 import { TemplateSection } from '@/modules/eightd/components/steps/TemplateSection'
 import { FormField } from '@/modules/eightd/components/shared/FormField'
@@ -137,10 +138,10 @@ function FiveWhyCard({
                       onChange={(e) =>
                         update(`why${n}` as keyof FiveWhyChain, e.target.value)
                       }
-                      rows={3}
-                      className={cn('min-h-24', err && 'border-red-500 focus-visible:ring-red-500')}
+                      rows={4}
+                      className={cn('min-h-32', err && 'border-red-500 focus-visible:ring-red-500')}
                     />
-                    {onRegenerateFrom && val.trim() && n < 5 && (
+                    {onRegenerateFrom && val.trim() && (
                       <div className="flex justify-end">
                         <Button
                           variant="ghost"
@@ -306,17 +307,16 @@ export function Step4Form({
     }
 
     debouncedConsistencyCheck(input, language)
-  }, [d2, d4, d5, hasGeneratedContent, language, debouncedConsistencyCheck])
+  }, [d2, d3.actions, d4, d5, hasGeneratedContent, language, debouncedConsistencyCheck])
 
   useEffect(() => {
     if (hasGeneratedContent && genResult) {
       triggerConsistencyCheck()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [d4, d5])
+  }, [d4, d5, genResult, hasGeneratedContent, triggerConsistencyCheck])
 
   /* ── D4 change handler ── */
-  const handleD4Change = (newD4: D4RootCause) => onChangeD4(newD4)
+  const handleD4Change = useCallback((newD4: D4RootCause) => onChangeD4(newD4), [onChangeD4])
 
   /** Validate that a date is not in the past */
   const futureDateErr = (value: string) => {
@@ -425,13 +425,13 @@ export function Step4Form({
       const previousWhys: string[] = []
       for (let i = 1; i < whyNumber; i++) {
         const k = `why${i}` as keyof FiveWhyChain
-        if (chain[k]) previousWhys.push(chain[k] as string)
+        if (chain[k]) previousWhys.push(normalizeWhyAnswer(chain[k] as string))
       }
 
       const input: ChainCompletionInput = {
         chainType,
         whyNumber,
-        currentWhy: currentValue,
+        currentWhy: normalizeWhyAnswer(currentValue),
         context: {
           d2: {
             what: d2.what,
@@ -449,12 +449,14 @@ export function Step4Form({
       const updatedChain = { ...chain }
       if (result.success && result.data) {
         if (result.data.improvedCurrentWhy.trim()) {
-          updatedChain[whyKey] = result.data.improvedCurrentWhy as never
+          updatedChain[whyKey] = normalizeWhyAnswer(result.data.improvedCurrentWhy) as never
         }
         let answerIndex = 0
         for (let i = whyNumber + 1; i <= 5; i++) {
           const k = `why${i}` as keyof FiveWhyChain
-          const generatedWhy = result.data.subsequentWhys[answerIndex]?.trim()
+          const generatedWhy = normalizeWhyAnswer(
+            result.data.subsequentWhys[answerIndex]?.trim() ?? '',
+          )
           if (generatedWhy) {
             updatedChain[k] = generatedWhy as never
           }
@@ -465,36 +467,38 @@ export function Step4Form({
         }
       }
 
+      const normalizedChain = normalizeFiveWhyChain(updatedChain)
+
       const nextD4: D4RootCause = {
         ...d4,
-        [chainType]: updatedChain,
+        [chainType]: normalizedChain,
       }
 
       // Keep systemic traceability aligned with technical-chain root causes.
-      if (chainType === 'tua' && updatedChain.rootCause.trim()) {
+      if (chainType === 'tua' && normalizedChain.rootCause.trim()) {
         const shouldRefreshSuaCause =
           !nextD4.sua.cause.trim() || nextD4.sua.derivedFrom.trim() === chain.rootCause.trim()
         nextD4.sua = {
           ...nextD4.sua,
           cause: shouldRefreshSuaCause
             ? language === 'de'
-              ? `Systemabsicherung fuer "${updatedChain.rootCause}" fehlt.`
-              : `System controls are missing to prevent "${updatedChain.rootCause}".`
+              ? `Systemabsicherung fuer "${normalizedChain.rootCause}" fehlt.`
+              : `System controls are missing to prevent "${normalizedChain.rootCause}".`
             : nextD4.sua.cause,
-          derivedFrom: updatedChain.rootCause,
+          derivedFrom: normalizedChain.rootCause,
         }
       }
-      if (chainType === 'tun' && updatedChain.rootCause.trim()) {
+      if (chainType === 'tun' && normalizedChain.rootCause.trim()) {
         const shouldRefreshSunCause =
           !nextD4.sun.cause.trim() || nextD4.sun.derivedFrom.trim() === chain.rootCause.trim()
         nextD4.sun = {
           ...nextD4.sun,
           cause: shouldRefreshSunCause
             ? language === 'de'
-              ? `Systemabsicherung fuer "${updatedChain.rootCause}" in der Fehlererkennung fehlt.`
-              : `System controls are missing to detect "${updatedChain.rootCause}".`
+              ? `Systemabsicherung fuer "${normalizedChain.rootCause}" in der Fehlererkennung fehlt.`
+              : `System controls are missing to detect "${normalizedChain.rootCause}".`
             : nextD4.sun.cause,
-          derivedFrom: updatedChain.rootCause,
+          derivedFrom: normalizedChain.rootCause,
         }
       }
 

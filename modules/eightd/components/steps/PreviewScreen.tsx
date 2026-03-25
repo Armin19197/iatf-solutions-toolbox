@@ -54,6 +54,23 @@ function formatMeasure(item: Partial<SystemicMeasureItem> | undefined) {
     .join(' | ')
 }
 
+function formatIsIsNotValue(
+  language: ReportData['language'],
+  isValue: string,
+  isNotValue: string,
+) {
+  const cleanedIs = isValue.trim()
+  const cleanedIsNot = isNotValue.trim()
+  if (!cleanedIs && !cleanedIsNot) return ''
+
+  const isPrefix = language === 'de' ? 'IST' : 'IS'
+  const isNotPrefix = language === 'de' ? 'IST NICHT' : 'IS NOT'
+  const parts = []
+  if (cleanedIs) parts.push(`${isPrefix}: ${cleanedIs}`)
+  if (cleanedIsNot) parts.push(`${isNotPrefix}: ${cleanedIsNot}`)
+  return parts.join(' | ')
+}
+
 /* ─── PreviewScreen ───────────────────────────────────────────────────── */
 
 interface PreviewScreenProps {
@@ -112,10 +129,22 @@ export function PreviewScreen({ report, onBack, onNext }: PreviewScreenProps) {
         <Row label={t('detection')} value={d2.detectionMethod} />
         <Row label={t('complaint')} value={d2.customerComplaintText} />
         <Row label={t('failureCode')} value={d2.internalFailureCode} />
-        <Row label={t('isWhat')} value={`IS: ${d2.isAnalysis.what.is} | IS NOT: ${d2.isAnalysis.what.isNot}`} />
-        <Row label={t('isWhere')} value={`IS: ${d2.isAnalysis.where.is} | IS NOT: ${d2.isAnalysis.where.isNot}`} />
-        <Row label={t('isWhen')} value={`IS: ${d2.isAnalysis.when.is} | IS NOT: ${d2.isAnalysis.when.isNot}`} />
-        <Row label={t('isHowMany')} value={`IS: ${d2.isAnalysis.howMany.is} | IS NOT: ${d2.isAnalysis.howMany.isNot}`} />
+        <Row
+          label={t('isWhat')}
+          value={formatIsIsNotValue(report.language, d2.isAnalysis.what.is, d2.isNotAnalysis.what.isNot)}
+        />
+        <Row
+          label={t('isWhere')}
+          value={formatIsIsNotValue(report.language, d2.isAnalysis.where.is, d2.isNotAnalysis.where.isNot)}
+        />
+        <Row
+          label={t('isWhen')}
+          value={formatIsIsNotValue(report.language, d2.isAnalysis.when.is, d2.isNotAnalysis.when.isNot)}
+        />
+        <Row
+          label={t('isHowMany')}
+          value={formatIsIsNotValue(report.language, d2.isAnalysis.howMany.is, d2.isNotAnalysis.howMany.isNot)}
+        />
         <Row label={t('notes')} value={d2.additionalNotes} />
       </Section>
 
