@@ -11,7 +11,6 @@ An AI-powered quality engineering and cost optimization platform designed for au
 ## 🚀 Key Features
 
 *   **8D Report Generator:** An intelligent, multi-step wizard that guides users through the VDA 8D problem-solving methodology. Uses AI to automatically generate Root Cause Analyses (5 Whys), Containment Actions, and fully compliant Corrective Actions based on structural rules.
-*   **AI Cost Optimizer:** A dashboard that connects to AWS environments to analyze billing records, detect anomalies, identify underutilized resources, and generate cost-saving recommendations.
 *   **Internationalization (i18n):** Full support for English and German interfaces (routing and translations via `next-intl`).
 *   **Professional Exports:** Server-side generation of pixel-perfect PDF and XLSX files.
 *   **Credit-Based Billing:** Integrated Stripe checkout flow for credit purchases with webhook verification.
@@ -20,7 +19,7 @@ An AI-powered quality engineering and cost optimization platform designed for au
 
 ## 🛠 Tech Stack
 
-*   **Framework:** Next.js 15 (App Router) + React 19
+*   **Framework:** Next.js 16 (App Router) + React 19
 *   **Language:** TypeScript
 *   **Styling & UI:** Tailwind CSS v4, `shadcn/ui`, `lucide-react`, Framer Motion
 *   **AI Providers:** Anthropic (`@anthropic-ai/sdk`)
