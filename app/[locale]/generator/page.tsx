@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useAutosave } from '@/modules/eightd/hooks/useAutosave'
 import { Step1Form } from '@/modules/eightd/components/steps/Step1Form'
@@ -10,39 +10,15 @@ import { Step4Form } from '@/modules/eightd/components/steps/Step4Form'
 import { Step5Form } from '@/modules/eightd/components/steps/Step5Form'
 import { PreviewScreen } from '@/modules/eightd/components/steps/PreviewScreen'
 import { ExportScreen } from '@/modules/eightd/components/steps/ExportScreen'
-import { GenerationErrorAlert } from '@/modules/eightd/components/shared/AIAlertFeedback'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { LanguageToggle } from '@/components/language-toggle'
 import { useFormState } from '@/modules/eightd/hooks/useFormState'
-import { useReportTranslation } from '@/modules/eightd/hooks/useAI'
-import type { Language, ReportData } from '@/modules/eightd/types/report'
+import type { Language } from '@/modules/eightd/types/report'
 import { useTranslations, useLocale } from 'next-intl'
 
 function isSupportedLocale(locale: string): locale is Language {
   return locale === 'de' || locale === 'en'
-}
-
-function hasReportContent(value: unknown, path: string[] = []): boolean {
-  if (typeof value === 'string') {
-    return path[0] !== 'language' && value.trim().length > 0
-  }
-
-  if (Array.isArray(value)) {
-    return value.some((item) => hasReportContent(item, path))
-  }
-
-  if (value && typeof value === 'object') {
-    return Object.entries(value as Record<string, unknown>).some(([key, nested]) =>
-      hasReportContent(nested, [...path, key]),
-    )
-  }
-
-  return false
-}
-
-function buildLocaleSyncKey(report: ReportData, targetLanguage: Language): string {
-  return `${report.language}->${targetLanguage}:${JSON.stringify(report)}`
 }
 
 export default function GeneratorPage() {
@@ -61,78 +37,14 @@ export default function GeneratorPage() {
     resetReport,
   } = useFormState()
   useAutosave(report)
-  const {
-    translateReport,
-    error: reportTranslationError,
-    clear: clearReportTranslation,
-  } = useReportTranslation()
   const t = useTranslations('step')
   const tApp = useTranslations('app')
-  const activeTranslationKey = useRef<string | null>(null)
-  const [failedTranslationKey, setFailedTranslationKey] = useState<string | null>(null)
-  const reportHasContent = hasReportContent(report)
 
   useEffect(() => {
-    if (!hydrated || !isSupportedLocale(locale)) return
+    if (!hydrated || !isSupportedLocale(locale) || report.language === locale) return
+    setLanguage(locale)
+  }, [hydrated, locale, report.language, setLanguage])
 
-    if (report.language === locale) {
-      activeTranslationKey.current = null
-      return
-    }
-
-    if (!reportHasContent) {
-      setLanguage(locale)
-      return
-    }
-
-    const requestKey = buildLocaleSyncKey(report, locale)
-    if (
-      activeTranslationKey.current === requestKey ||
-      failedTranslationKey === requestKey
-    ) {
-      return
-    }
-
-    activeTranslationKey.current = requestKey
-    clearReportTranslation()
-
-    let cancelled = false
-
-    void (async () => {
-      const result = await translateReport({
-        report,
-        targetLanguage: locale,
-      })
-
-      if (cancelled) return
-
-      activeTranslationKey.current = null
-
-      if (result.success) {
-        setFailedTranslationKey(null)
-        mergeReport(result.data)
-        return
-      }
-
-      setFailedTranslationKey(requestKey)
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [
-    clearReportTranslation,
-    hydrated,
-    locale,
-    mergeReport,
-    report,
-    reportHasContent,
-    failedTranslationKey,
-    setLanguage,
-    translateReport,
-  ])
-
-  // Scroll to the top of the page whenever the user navigates to a new step
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -140,16 +52,6 @@ export default function GeneratorPage() {
   }, [currentStep])
 
   const progressPct = Math.round(((stepIndex + 1) / totalSteps) * 100)
-  const localeSyncKey =
-    hydrated &&
-    isSupportedLocale(locale) &&
-    report.language !== locale &&
-    reportHasContent
-      ? buildLocaleSyncKey(report, locale)
-      : null
-  const showLocaleSyncLoading =
-    !hydrated ||
-    (localeSyncKey !== null && failedTranslationKey !== localeSyncKey)
 
   function renderStep() {
     switch (currentStep) {
@@ -173,7 +75,7 @@ export default function GeneratorPage() {
             onGenerate={(d3, d4, d5) => mergeReport({ d3, d4, d5 })}
             onNext={nextStep}
             onBack={prevStep}
-            language={report.language}
+            language={isSupportedLocale(locale) ? locale : report.language}
           />
         )
       case 'step3':
@@ -185,7 +87,7 @@ export default function GeneratorPage() {
             onChange={(d) => updateReport('d3', d)}
             onNext={nextStep}
             onBack={prevStep}
-            language={report.language}
+            language={isSupportedLocale(locale) ? locale : report.language}
           />
         )
       case 'step4':
@@ -201,7 +103,7 @@ export default function GeneratorPage() {
             onChangeD5={(d) => updateReport('d5', d)}
             onNext={nextStep}
             onBack={prevStep}
-            language={report.language}
+            language={isSupportedLocale(locale) ? locale : report.language}
           />
         )
       case 'step5':
@@ -232,13 +134,13 @@ export default function GeneratorPage() {
     }
   }
 
-  if (showLocaleSyncLoading) {
+  if (!hydrated) {
     return (
       <main className="min-h-screen bg-neutral-50">
         <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4">
           <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-600 shadow-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>{hydrated ? tApp('translatingReport') : tApp('restoringDraft')}</span>
+            <span>{tApp('restoringDraft')}</span>
           </div>
         </div>
       </main>
@@ -247,9 +149,7 @@ export default function GeneratorPage() {
 
   return (
     <main className="min-h-screen bg-neutral-50">
-      {/* Header */}
       <div className="sticky top-0 z-50 bg-white shadow-sm">
-        {/* Header */}
         <header className="border-b border-neutral-200">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 sm:py-4">
             <div className="min-w-0 flex-1">
@@ -269,7 +169,6 @@ export default function GeneratorPage() {
           </div>
         </header>
 
-        {/* Progress */}
         <div className="border-b border-neutral-100 px-4 py-2">
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center gap-3">
@@ -285,9 +184,7 @@ export default function GeneratorPage() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="mx-auto max-w-4xl space-y-4 px-4 py-8">
-        <GenerationErrorAlert error={localeSyncKey !== null ? reportTranslationError : null} />
         {renderStep()}
       </div>
     </main>

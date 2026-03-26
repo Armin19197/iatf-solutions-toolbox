@@ -64,9 +64,17 @@ export interface ExportLabels {
   supplier: string
   product: string
   partNumber: string
+  customerComplaintNumber: string
+  customerPartNumber: string
+  supplierPartNumber: string
   reportDate: string
   reportId: string
   noData: string
+  cleanpointDeliveryOn: string
+  deliveryNoteNumber: string
+  deliveredOn: string
+  quantityCorrect: string
+  quantityIncorrect: string
 }
 
 const EN_LABELS: ExportLabels = {
@@ -121,9 +129,17 @@ const EN_LABELS: ExportLabels = {
   supplier: 'Supplier',
   product: 'Product',
   partNumber: 'Part Number',
+  customerComplaintNumber: 'Customer Complaint Number',
+  customerPartNumber: 'Customer Part Number',
+  supplierPartNumber: 'Supplier Part Number',
   reportDate: 'Report Date',
   reportId: 'Report ID',
   noData: 'No data entered',
+  cleanpointDeliveryOn: 'Cleanpoint Delivery On',
+  deliveryNoteNumber: 'Delivery Note Number',
+  deliveredOn: 'Delivered On',
+  quantityCorrect: 'Quantity Correct',
+  quantityIncorrect: 'Quantity Incorrect',
 }
 
 const DE_LABELS: ExportLabels = {
@@ -178,9 +194,17 @@ const DE_LABELS: ExportLabels = {
   supplier: 'Lieferant',
   product: 'Produkt',
   partNumber: 'Teilenummer',
+  customerComplaintNumber: 'Kundenreklamationsnummer',
+  customerPartNumber: 'Kundenteilenummer',
+  supplierPartNumber: 'Lieferantenteilenummer',
   reportDate: 'Berichtsdatum',
   reportId: 'Berichts-ID',
   noData: 'Keine Daten',
+  cleanpointDeliveryOn: 'Cleanpoint Lieferung am',
+  deliveryNoteNumber: 'Lieferscheinnummer',
+  deliveredOn: 'Geliefert am',
+  quantityCorrect: 'Menge i.O.',
+  quantityIncorrect: 'Menge n.i.O.',
 }
 
 /** Get the appropriate label set for the given language. */

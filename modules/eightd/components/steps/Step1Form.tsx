@@ -156,6 +156,33 @@ export function Step1Form({
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <FormField
+                type="input"
+                id="customerComplaintNumber"
+                label={t('customerComplaintNumber')}
+                placeholder={t('customerComplaintNumberPh')}
+                value={metadata.customerComplaintNumber}
+                onChange={(v) => updateMeta('customerComplaintNumber', v)}
+              />
+              <FormField
+                type="input"
+                id="customerPartNumber"
+                label={t('customerPartNumber')}
+                placeholder={t('customerPartNumberPh')}
+                value={metadata.customerPartNumber}
+                onChange={(v) => updateMeta('customerPartNumber', v)}
+              />
+              <FormField
+                type="input"
+                id="supplierPartNumber"
+                label={t('supplierPartNumber')}
+                placeholder={t('supplierPartNumberPh')}
+                value={metadata.supplierPartNumber}
+                onChange={(v) => updateMeta('supplierPartNumber', v)}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <FormField
                 type="date"
                 label={t('complaintDate')}
                 value={metadata.complaintDate}
@@ -315,4 +342,3 @@ export function Step1Form({
     </div>
   )
 }
-

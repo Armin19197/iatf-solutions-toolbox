@@ -6,6 +6,9 @@ export interface Metadata {
   supplier: string
   productName: string
   partNumber: string
+  customerComplaintNumber: string
+  customerPartNumber: string
+  supplierPartNumber: string
   complaintDate: string
   reportDate: string
   location: string
@@ -80,6 +83,11 @@ export interface ContainmentAction {
 
 export interface D3Containment {
   actions: ContainmentAction[]
+  cleanpointDeliveryOn: string
+  deliveryNoteNumber: string
+  deliveredOn: string
+  quantityCorrect: string
+  quantityIncorrect: string
   effectivenessVerification: string
 }
 
@@ -245,6 +253,9 @@ export const EMPTY_REPORT: ReportData = {
     supplier: '',
     productName: '',
     partNumber: '',
+    customerComplaintNumber: '',
+    customerPartNumber: '',
+    supplierPartNumber: '',
     complaintDate: '',
     reportDate: '',
     location: '',
@@ -282,7 +293,15 @@ export const EMPTY_REPORT: ReportData = {
     internalFailureCode: '',
     additionalNotes: '',
   },
-  d3: { actions: [], effectivenessVerification: '' },
+  d3: {
+    actions: [],
+    cleanpointDeliveryOn: '',
+    deliveryNoteNumber: '',
+    deliveredOn: '',
+    quantityCorrect: '',
+    quantityIncorrect: '',
+    effectivenessVerification: '',
+  },
   d4: {
     tua: { ...EMPTY_FIVE_WHY },
     tun: { ...EMPTY_FIVE_WHY },

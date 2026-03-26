@@ -269,6 +269,48 @@ export function Step3Form({
 
           <Separator className="my-4" />
 
+          <TemplateSection title={t('deliveryTraceabilityTitle')} description={t('deliveryTraceabilityDesc')}>
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              <FormField
+                type="date"
+                label={t('cleanpointDeliveryOn')}
+                value={data.cleanpointDeliveryOn}
+                onChange={(v) => onChange({ ...data, cleanpointDeliveryOn: v })}
+                placeholder={t('cleanpointDeliveryOn')}
+              />
+              <FormField
+                type="input"
+                label={t('deliveryNoteNumber')}
+                placeholder={t('deliveryNoteNumberPh')}
+                value={data.deliveryNoteNumber}
+                onChange={(v) => onChange({ ...data, deliveryNoteNumber: v })}
+              />
+              <FormField
+                type="date"
+                label={t('deliveredOn')}
+                value={data.deliveredOn}
+                onChange={(v) => onChange({ ...data, deliveredOn: v })}
+                placeholder={t('deliveredOn')}
+              />
+              <FormField
+                type="input"
+                label={t('quantityCorrect')}
+                placeholder={t('quantityCorrectPh')}
+                value={data.quantityCorrect}
+                onChange={(v) => onChange({ ...data, quantityCorrect: v })}
+              />
+              <FormField
+                type="input"
+                label={t('quantityIncorrect')}
+                placeholder={t('quantityIncorrectPh')}
+                value={data.quantityIncorrect}
+                onChange={(v) => onChange({ ...data, quantityIncorrect: v })}
+              />
+            </div>
+          </TemplateSection>
+
+          <Separator className="my-4" />
+
           <TemplateSection title={t('verificationTitle')} description={t('verificationDesc')}>
             <FormField
               type="textarea"

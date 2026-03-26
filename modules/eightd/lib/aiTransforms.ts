@@ -28,59 +28,150 @@ export function normalizeFiveWhyChain<T extends FiveWhyChain>(chain: T): T {
   }
 }
 
+function normalizeComparableText(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+}
+
+function pickDistinctValue(
+  candidate: string,
+  fallback: string,
+  disallowed: string[],
+): string {
+  const trimmed = candidate.trim()
+  if (!trimmed) return fallback
+
+  const normalized = normalizeComparableText(trimmed)
+  if (!normalized) return fallback
+
+  const conflicts = disallowed.some((value) => normalizeComparableText(value) === normalized)
+  return conflicts ? fallback : trimmed
+}
+
 export function applyComplaintExtraction(
   current: D2Problem,
   extracted: ComplaintExtractionResult,
 ): D2Problem {
+  const nextWhat = pickDistinctValue(extracted.what, current.what, [])
+  const nextWhere = pickDistinctValue(extracted.where, current.where, [nextWhat])
+  const nextWhen = pickDistinctValue(extracted.when, current.when, [nextWhat, nextWhere])
+  const nextHowMany = pickDistinctValue(
+    extracted.howMany,
+    current.howMany,
+    [nextWhat, nextWhere, nextWhen],
+  )
+  const nextDetectionMethod = pickDistinctValue(
+    extracted.detectionMethod,
+    current.detectionMethod,
+    [nextWhat, nextWhere, nextWhen, nextHowMany],
+  )
+  const nextHow = pickDistinctValue(
+    extracted.how,
+    current.how,
+    [nextWhat, nextWhere, nextWhen, nextHowMany, nextDetectionMethod],
+  )
+  const nextWhyProblem = pickDistinctValue(
+    extracted.whyProblem,
+    current.whyProblem,
+    [nextWhat, nextWhere, nextWhen, nextHowMany, nextDetectionMethod, nextHow],
+  )
+  const nextQuantitativeDeviation = pickDistinctValue(
+    extracted.quantitativeDeviation,
+    current.quantitativeDeviation,
+    [nextHowMany],
+  )
+  const nextQualitativeDescription = pickDistinctValue(
+    extracted.qualitativeDescription,
+    current.qualitativeDescription,
+    [nextWhat, nextHow],
+  )
+  const nextCustomerImpact = pickDistinctValue(
+    extracted.customerImpact,
+    current.customerImpact,
+    [nextWhyProblem],
+  )
+
   return {
     ...current,
-    what: extracted.what || current.what,
-    where: extracted.where || current.where,
-    when: extracted.when || current.when,
-    howMany: extracted.howMany || current.howMany,
-    detectionMethod: extracted.detectionMethod || current.detectionMethod,
-    how: extracted.how || current.how,
-    whyProblem: extracted.whyProblem || current.whyProblem,
-    quantitativeDeviation:
-      extracted.quantitativeDeviation || current.quantitativeDeviation,
-    qualitativeDescription:
-      extracted.qualitativeDescription || current.qualitativeDescription,
-    customerImpact: extracted.customerImpact || current.customerImpact,
+    what: nextWhat,
+    where: nextWhere,
+    when: nextWhen,
+    howMany: nextHowMany,
+    detectionMethod: nextDetectionMethod,
+    how: nextHow,
+    whyProblem: nextWhyProblem,
+    quantitativeDeviation: nextQuantitativeDeviation,
+    qualitativeDescription: nextQualitativeDescription,
+    customerImpact: nextCustomerImpact,
     isAnalysis: {
       what: {
         ...current.isAnalysis.what,
-        is: extracted.isAnalysis.what || current.isAnalysis.what.is,
+        is: pickDistinctValue(
+          extracted.isAnalysis.what,
+          current.isAnalysis.what.is,
+          [nextWhat],
+        ),
       },
       where: {
         ...current.isAnalysis.where,
-        is: extracted.isAnalysis.where || current.isAnalysis.where.is,
+        is: pickDistinctValue(
+          extracted.isAnalysis.where,
+          current.isAnalysis.where.is,
+          [nextWhere],
+        ),
       },
       when: {
         ...current.isAnalysis.when,
-        is: extracted.isAnalysis.when || current.isAnalysis.when.is,
+        is: pickDistinctValue(
+          extracted.isAnalysis.when,
+          current.isAnalysis.when.is,
+          [nextWhen],
+        ),
       },
       howMany: {
         ...current.isAnalysis.howMany,
-        is: extracted.isAnalysis.howMany || current.isAnalysis.howMany.is,
+        is: pickDistinctValue(
+          extracted.isAnalysis.howMany,
+          current.isAnalysis.howMany.is,
+          [nextHowMany],
+        ),
       },
     },
     isNotAnalysis: {
       what: {
         ...current.isNotAnalysis.what,
-        isNot: extracted.isNotAnalysis.what || current.isNotAnalysis.what.isNot,
+        isNot: pickDistinctValue(
+          extracted.isNotAnalysis.what,
+          current.isNotAnalysis.what.isNot,
+          [],
+        ),
       },
       where: {
         ...current.isNotAnalysis.where,
-        isNot: extracted.isNotAnalysis.where || current.isNotAnalysis.where.isNot,
+        isNot: pickDistinctValue(
+          extracted.isNotAnalysis.where,
+          current.isNotAnalysis.where.isNot,
+          [],
+        ),
       },
       when: {
         ...current.isNotAnalysis.when,
-        isNot: extracted.isNotAnalysis.when || current.isNotAnalysis.when.isNot,
+        isNot: pickDistinctValue(
+          extracted.isNotAnalysis.when,
+          current.isNotAnalysis.when.isNot,
+          [],
+        ),
       },
       howMany: {
         ...current.isNotAnalysis.howMany,
-        isNot:
-          extracted.isNotAnalysis.howMany || current.isNotAnalysis.howMany.isNot,
+        isNot: pickDistinctValue(
+          extracted.isNotAnalysis.howMany,
+          current.isNotAnalysis.howMany.isNot,
+          [],
+        ),
       },
     },
   }

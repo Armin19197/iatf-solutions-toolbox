@@ -1,18 +1,19 @@
 'use client'
 
-import type { ReactNode } from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertTriangle, CheckCircle2, Info } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import type { SufficiencyResult, ConsistencyResult } from '@/modules/eightd/types/ai'
+import type { SufficiencyResult, ConsistencyResult, SufficiencyField } from '@/modules/eightd/types/ai'
 
 /* ─── Sufficiency alerts ─────────────────────────────────────────────── */
 
 export function SufficiencyAlert({
   result,
+  onIssueClick,
 }: {
   result: SufficiencyResult | null
+  onIssueClick?: (field: SufficiencyField) => void
 }) {
   const tAi = useTranslations('ai')
   if (!result) return null
@@ -34,13 +35,24 @@ export function SufficiencyAlert({
       <AlertTitle>{tAi('sufficiency.failTitle')}</AlertTitle>
       <AlertDescription>
         <p className="mb-2">{tAi('sufficiency.fail')}</p>
-        <ul className="list-disc list-inside space-y-1">
-          {result.gaps.map((gap: string, i: number) => (
-            <li key={i} className="text-sm">
-              {gap}
-            </li>
+        <div className="space-y-1.5">
+          {result.issues.map((issue, i) => (
+            <div key={`${issue.field}-${i}`} className="text-sm">
+              {onIssueClick ? (
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-left text-sm text-destructive underline-offset-4 hover:underline"
+                  onClick={() => onIssueClick(issue.field)}
+                >
+                  {issue.message}
+                </Button>
+              ) : (
+                <span>{issue.message}</span>
+              )}
+            </div>
           ))}
-        </ul>
+        </div>
       </AlertDescription>
     </Alert>
   )

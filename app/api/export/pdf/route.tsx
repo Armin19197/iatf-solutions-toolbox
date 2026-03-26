@@ -16,7 +16,16 @@ import { reportDataSchema } from '@/modules/eightd/schemas/reportValidation'
 import { getExportLabels } from '@/modules/eightd/lib/exportLabels'
 import { isAuthenticated } from '@/lib/session/session'
 
-Font.registerHyphenationCallback((word) => [word])
+Font.registerHyphenationCallback((word) => {
+  // Keep normal words intact; split long uninterrupted tokens so cells do not overflow.
+  if (!word || word.length <= 18) return [word]
+
+  const chunks: string[] = []
+  for (let i = 0; i < word.length; i += 12) {
+    chunks.push(word.slice(i, i + 12))
+  }
+  return chunks
+})
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -25,15 +34,21 @@ const S = StyleSheet.create({
     fontFamily: 'Helvetica',
     fontSize: 9,
     padding: 40,
+    paddingBottom: 58,
+    border: '1 solid #cbd5e1',
     color: '#1a1a1a',
   },
   // Cover
   coverPage: {
     fontFamily: 'Helvetica',
     fontSize: 9,
-    padding: 60,
+    paddingTop: 30,
+    paddingRight: 60,
+    paddingBottom: 78,
+    paddingLeft: 60,
+    border: '1 solid #cbd5e1',
     color: '#1a1a1a',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   coverTitle: {
     fontSize: 28,
@@ -69,34 +84,43 @@ const S = StyleSheet.create({
   // Key-value pairs
   fieldRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 5,
     paddingBottom: 4,
     borderBottom: '1 solid #e2e8f0',
   },
   fieldLabel: {
     width: 150,
+    paddingRight: 8,
     fontFamily: 'Helvetica-Bold',
     color: '#475569',
   },
-  fieldValue: { flex: 1 },
+  fieldValue: { flex: 1, lineHeight: 1.35 },
   // Tables
   table: { marginBottom: 4 },
   tableHeader: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     backgroundColor: '#dbeafe',
     fontFamily: 'Helvetica-Bold',
     padding: '4 6',
   },
   tableRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     padding: '4 6',
     borderBottom: '1 solid #f1f5f9',
   },
   tableRowAlt: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     padding: '4 6',
     backgroundColor: '#f8fafc',
     borderBottom: '1 solid #f1f5f9',
+  },
+  tableCell: {
+    lineHeight: 1.3,
+    paddingRight: 6,
   },
   // Five-Why
   whyBlock: { marginBottom: 10 },
@@ -107,11 +131,12 @@ const S = StyleSheet.create({
   },
   whyRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 3,
      paddingLeft: 8,
   },
-  whyLabel: { width: 50, fontFamily: 'Helvetica-Bold', color: '#64748b' },
-  whyValue: { flex: 1 },
+  whyLabel: { width: 50, paddingRight: 6, fontFamily: 'Helvetica-Bold', color: '#64748b' },
+  whyValue: { flex: 1, lineHeight: 1.3 },
   rootCauseBox: {
     backgroundColor: '#fef9c3',
     padding: '5 8',
@@ -191,6 +216,9 @@ function EightDDocument({ report, lang }: { report: ReportData; lang: 'en' | 'de
             [labels.supplier, metadata.supplier],
             [labels.product, metadata.productName],
             [labels.partNumber, metadata.partNumber],
+            [labels.customerComplaintNumber, metadata.customerComplaintNumber],
+            [labels.customerPartNumber, metadata.customerPartNumber],
+            [labels.supplierPartNumber, metadata.supplierPartNumber],
             [labels.reportDate, metadata.reportDate],
           ].map(([lbl, val]) => (
             <View style={S.coverMetaRow} key={lbl}>
@@ -235,19 +263,24 @@ function EightDDocument({ report, lang }: { report: ReportData; lang: 'en' | 'de
           ) : (
             <View style={S.table}>
               <View style={S.tableHeader}>
-                <Text style={{ flex: 3 }}>{labels.action}</Text>
-                <Text style={{ flex: 2 }}>{labels.responsible}</Text>
-                <Text style={{ flex: 1 }}>{labels.dueDate}</Text>
+                <Text style={[S.tableCell, { flex: 3 }]}>{labels.action}</Text>
+                <Text style={[S.tableCell, { flex: 2 }]}>{labels.responsible}</Text>
+                <Text style={[S.tableCell, { flex: 1 }]}>{labels.dueDate}</Text>
               </View>
               {d3.actions.map((a, i) => (
                 <View style={i % 2 === 0 ? S.tableRow : S.tableRowAlt} key={a.id || i}>
-                  <Text style={{ flex: 3 }}>{a.action}</Text>
-                  <Text style={{ flex: 2 }}>{a.responsible}</Text>
-                  <Text style={{ flex: 1 }}>{a.dueDate}</Text>
+                  <Text style={[S.tableCell, { flex: 3 }]}>{a.action || '—'}</Text>
+                  <Text style={[S.tableCell, { flex: 2 }]}>{a.responsible || '—'}</Text>
+                  <Text style={[S.tableCell, { flex: 1 }]}>{a.dueDate || '—'}</Text>
                 </View>
               ))}
             </View>
           )}
+          <Field label={labels.cleanpointDeliveryOn} value={d3.cleanpointDeliveryOn} />
+          <Field label={labels.deliveryNoteNumber} value={d3.deliveryNoteNumber} />
+          <Field label={labels.deliveredOn} value={d3.deliveredOn} />
+          <Field label={labels.quantityCorrect} value={d3.quantityCorrect} />
+          <Field label={labels.quantityIncorrect} value={d3.quantityIncorrect} />
         </View>
         <Footer reportId={metadata.reportId} />
       </Page>
@@ -331,19 +364,19 @@ function EightDDocument({ report, lang }: { report: ReportData; lang: 'en' | 'de
           ) : (
             <View style={S.table}>
               <View style={S.tableHeader}>
-                <Text style={{ flex: 4 }}>{labels.action}</Text>
-                <Text style={{ flex: 2 }}>{labels.relatedCause}</Text>
-                <Text style={{ flex: 2 }}>{labels.responsible}</Text>
-                <Text style={{ flex: 1 }}>{labels.targetDate}</Text>
-                <Text style={{ flex: 2 }}>{labels.verification}</Text>
+                <Text style={[S.tableCell, { flex: 4 }]}>{labels.action}</Text>
+                <Text style={[S.tableCell, { flex: 2 }]}>{labels.relatedCause}</Text>
+                <Text style={[S.tableCell, { flex: 2 }]}>{labels.responsible}</Text>
+                <Text style={[S.tableCell, { flex: 1 }]}>{labels.targetDate}</Text>
+                <Text style={[S.tableCell, { flex: 2 }]}>{labels.verification}</Text>
               </View>
               {d5.actions.map((a, i) => (
                 <View style={i % 2 === 0 ? S.tableRow : S.tableRowAlt} key={a.id || i}>
-                  <Text style={{ flex: 4 }}>{a.action}</Text>
-                  <Text style={{ flex: 2 }}>{a.relatedRootCause}</Text>
-                  <Text style={{ flex: 2 }}>{a.responsible}</Text>
-                  <Text style={{ flex: 1 }}>{a.targetDate}</Text>
-                  <Text style={{ flex: 2 }}>{a.verificationMethod}</Text>
+                  <Text style={[S.tableCell, { flex: 4 }]}>{a.action || '—'}</Text>
+                  <Text style={[S.tableCell, { flex: 2 }]}>{a.relatedRootCause || '—'}</Text>
+                  <Text style={[S.tableCell, { flex: 2 }]}>{a.responsible || '—'}</Text>
+                  <Text style={[S.tableCell, { flex: 1 }]}>{a.targetDate || '—'}</Text>
+                  <Text style={[S.tableCell, { flex: 2 }]}>{a.verificationMethod || '—'}</Text>
                 </View>
               ))}
             </View>

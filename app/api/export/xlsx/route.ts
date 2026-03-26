@@ -245,6 +245,13 @@ function build8DReport(wb: ExcelJS.Workbook, r: ReportData, isDE: boolean) {
   kvPair(ws, row, 7, 8, 9, isDE ? 'Chargen-/Losnr.:' : 'Batch / Lot No.:', r.metadata.batchLotNumber)
   row++
 
+  ws.getRow(row).height = 18
+  kvPair(ws, row, 1, 2, 2, isDE ? 'Kundenrekl.-Nr.:' : 'Customer Complaint No.:', r.metadata.customerComplaintNumber)
+  kvPair(ws, row, 3, 4, 4, isDE ? 'Kundenteilenr.:' : 'Customer Part No.:', r.metadata.customerPartNumber)
+  kvPair(ws, row, 5, 6, 6, isDE ? 'Lieferantenteilenr.:' : 'Supplier Part No.:', r.metadata.supplierPartNumber)
+  merge(ws, row, 7, 9)
+  row++
+
   // Row: Complaint Date
   ws.getRow(row).height = 18
   kvPair(ws, row, 1, 2, 4, isDE ? 'Beanstandungsdatum:' : 'Complaint Date:', r.metadata.complaintDate)
@@ -348,6 +355,17 @@ function build8DReport(wb: ExcelJS.Workbook, r: ReportData, isDE: boolean) {
     ], i % 2 === 1)
     row++
   }
+
+  ws.getRow(row).height = 18
+  kvPair(ws, row, 1, 2, 4, isDE ? 'Cleanpoint Lieferung am:' : 'Cleanpoint Delivery On:', r.d3.cleanpointDeliveryOn)
+  kvPair(ws, row, 5, 6, 9, isDE ? 'Lieferscheinnummer:' : 'Delivery Note Number:', r.d3.deliveryNoteNumber)
+  row++
+
+  ws.getRow(row).height = 18
+  kvPair(ws, row, 1, 2, 4, isDE ? 'Geliefert am:' : 'Delivered On:', r.d3.deliveredOn)
+  kvPair(ws, row, 5, 6, 7, isDE ? 'Menge i.O.:' : 'Quantity Correct:', r.d3.quantityCorrect)
+  kvPair(ws, row, 8, 9, 9, isDE ? 'Menge n.i.O.:' : 'Quantity Incorrect:', r.d3.quantityIncorrect)
+  row++
 
   // Effectiveness verification
   labeledTextArea(ws, row,

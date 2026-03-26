@@ -106,6 +106,11 @@ export function mapGenerationToFormData(
       riskAssessment: a.riskAssessment,
       notes: '',
     })),
+    cleanpointDeliveryOn: '',
+    deliveryNoteNumber: '',
+    deliveredOn: '',
+    quantityCorrect: '',
+    quantityIncorrect: '',
     effectivenessVerification: '',
   }
 

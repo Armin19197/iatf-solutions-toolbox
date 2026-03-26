@@ -13,7 +13,12 @@ import {
   useGeneration,
   useComplaintExtraction,
 } from '@/modules/eightd/hooks/useAI'
-import type { SufficiencyInput, AssistInput, GenerationInput } from '@/modules/eightd/types/ai'
+import type {
+  SufficiencyInput,
+  AssistInput,
+  GenerationInput,
+  SufficiencyField,
+} from '@/modules/eightd/types/ai'
 import { mapGenerationToFormData } from '@/modules/eightd/lib/mapGeneration'
 import { buildGenerationInput } from '@/modules/eightd/lib/buildGenerationInput'
 import { applyComplaintExtraction } from '@/modules/eightd/lib/aiTransforms'
@@ -36,6 +41,16 @@ interface Step2FormProps {
   onNext: () => void
   onBack: () => void
   language: 'en' | 'de'
+}
+
+const SUFFICIENCY_FIELD_IDS: Record<SufficiencyField, string> = {
+  what: 'd2-what',
+  where: 'd2-where',
+  when: 'd2-when',
+  howMany: 'd2-howMany',
+  detectionMethod: 'd2-detection',
+  whyProblem: 'd2-whyProblem',
+  customerComplaintText: 'd2-complaint',
 }
 
 export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, onBack, language }: Step2FormProps) {
@@ -211,6 +226,17 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
 
   const complaintToolsError = extractError
   const complaintToolsLoading = extractLoading
+
+  const handleIssueClick = (field: SufficiencyField) => {
+    const fieldId = SUFFICIENCY_FIELD_IDS[field]
+    const element = document.getElementById(fieldId)
+    if (!element) return
+
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (element instanceof HTMLElement) {
+      element.focus()
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -476,7 +502,7 @@ export function Step2Form({ data, d1, metadata, onChange, onGenerate, onNext, on
 
       {/* AI feedback alerts */}
       <GenerationErrorAlert error={complaintToolsError} />
-      <SufficiencyAlert result={suffResult} />
+      <SufficiencyAlert result={suffResult} onIssueClick={handleIssueClick} />
       <GenerationErrorAlert error={genError} />
 
       <StepNavigation

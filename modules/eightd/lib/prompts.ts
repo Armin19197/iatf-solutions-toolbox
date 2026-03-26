@@ -16,6 +16,7 @@ import type {
   GenerationD5Input,
   ConsistencyInput,
   ChainCompletionInput,
+  RootCauseBackfillInput,
 } from '../types/ai'
 
 // ─── Global System Prompt (VDA 8D Rules) ─────────────────────────────────────
@@ -136,8 +137,20 @@ SUFFICIENCY CRITERIA — All must be met for sufficient: true:
 5. HOW was it detected? — Detection method, inspection type, or observation.
 
 IMPORTANT: Do NOT require excessive detail. As long as each of the five questions above has a meaningful, relevant answer, consider the data sufficient. Do NOT ask for internal supplier process information — D2 describes the problem from the CUSTOMER's perspective only.
+Only flag the most blocking D2 issues. Ignore optional nice-to-have detail.
 
-When in doubt, return sufficient: false with a SHORT list of specific gaps (maximum 3 items).
+If the data is insufficient:
+1. Return a maximum of 3 issues.
+2. Each issue must point to exactly one of these fields:
+   - what
+   - where
+   - when
+   - howMany
+   - detectionMethod
+   - whyProblem
+   - customerComplaintText
+3. Each message must be short, concrete, and actionable.
+4. Do not return duplicate issues for the same missing fact.
 
 Respond in ${lang}.
 ${JSON_ONLY_INSTRUCTION}
@@ -145,7 +158,12 @@ ${JSON_ONLY_INSTRUCTION}
 Required JSON schema:
 {
   "sufficient": boolean,
-  "gaps": ["string — specific information that is missing or invalid. Empty array if sufficient. Maximum 3 items."]
+  "issues": [
+    {
+      "field": "what" | "where" | "when" | "howMany" | "detectionMethod" | "whyProblem" | "customerComplaintText",
+      "message": "string — short field-specific blocker. Empty array if sufficient."
+    }
+  ]
 }`
 }
 
@@ -165,6 +183,7 @@ D2 — Problem Description:
 - When: ${input.d2.when}
 - How many affected: ${input.d2.howMany}
 - Detection method: ${input.d2.detectionMethod}
+- Why this is a customer problem: ${input.d2.whyProblem || '(not provided)'}
 - Customer complaint text: ${input.d2.customerComplaintText || '(not provided)'}
 - Additional notes: ${input.d2.additionalNotes || '(not provided)'}
 
@@ -1039,4 +1058,53 @@ User's edited Why ${input.whyNumber}:
 
 Please correct the grammar of Why ${input.whyNumber}, generate the remaining ${missingCount} subsequent Whys logically, and end with a final root cause.
 If there are 0 remaining Whys, return an empty subsequentWhys array.`
+}
+
+export function buildRootCauseBackfillSystemPrompt(language: 'en' | 'de'): string {
+  const lang = language === 'de' ? 'German' : 'English'
+  return `${VDA_8D_GLOBAL_RULES}
+
+You are backfilling a 5-Why chain from an already entered root cause.
+
+Goal:
+1. Keep the provided root cause aligned as the final conclusion.
+2. Generate a plausible answer-only why chain that logically leads to that root cause.
+3. Generate a concise possibleCause statement that sits above the chain.
+
+Rules:
+1. Use ONLY answer statements in why1 to why5. Do not include question text.
+2. Each why must logically lead to the next one.
+3. why5 must lead directly into the provided root cause.
+4. Keep the supplied root cause wording unless a very small grammar correction is needed.
+5. Tailor the chain to the D2 context and the chain type.
+
+Respond in ${lang}.
+${JSON_ONLY_INSTRUCTION}
+
+Required JSON schema:
+{
+  "possibleCause": "string",
+  "why1": "string",
+  "why2": "string",
+  "why3": "string",
+  "why4": "string",
+  "why5": "string",
+  "rootCause": "string"
+}`
+}
+
+export function buildRootCauseBackfillUserPrompt(input: RootCauseBackfillInput): string {
+  return `Problem Context:
+- What: ${input.context.d2.what}
+- Where: ${input.context.d2.where}
+- When: ${input.context.d2.when}
+- How many: ${input.context.d2.howMany}
+- Detection method: ${input.context.d2.detectionMethod}
+
+Chain Type: ${input.chainType.toUpperCase()} (${input.chainType === 'tua' ? 'technical cause of occurrence' : 'technical cause of non-detection'})
+
+User-entered root cause:
+"${input.rootCause}"
+
+Backfill the possible cause and a complete 5-Why chain that logically leads to this root cause.`
 }

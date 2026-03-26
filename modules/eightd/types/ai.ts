@@ -13,8 +13,10 @@ import type {
   generationD5ResultSchema,
   consistencyResultSchema,
   chainCompletionResultSchema,
+  rootCauseBackfillResultSchema,
   complaintExtractionResultSchema,
   textTranslationResultSchema,
+  sufficiencyFieldSchema,
 } from '../schemas/aiSchemas'
 import type { CauseType, CauseDomain } from '../lib/ontology'
 import type { ReportData } from './report'
@@ -29,6 +31,7 @@ export type AICallType =
   | 'generation-d5'
   | 'consistency'
   | 'chainCompletion'
+  | 'rootCauseBackfill'
   | 'complaintExtraction'
   | 'textTranslation'
   | 'reportTranslation'
@@ -72,6 +75,7 @@ export interface ReportTranslationInput {
 // ─── AI Call: Sufficiency Check ──────────────────────────────────────────────
 
 export type SufficiencyResult = z.infer<typeof sufficiencyResultSchema>
+export type SufficiencyField = z.infer<typeof sufficiencyFieldSchema>
 
 export interface SufficiencyInput {
   d1: {
@@ -87,6 +91,7 @@ export interface SufficiencyInput {
     when: string
     howMany: string
     detectionMethod: string
+    whyProblem: string
     customerComplaintText: string
     additionalNotes: string
   }
@@ -330,6 +335,22 @@ export interface ChainCompletionInput {
   }
 }
 
+export type RootCauseBackfillResult = z.infer<typeof rootCauseBackfillResultSchema>
+
+export interface RootCauseBackfillInput {
+  chainType: 'tua' | 'tun'
+  rootCause: string
+  context: {
+    d2: {
+      what: string
+      where: string
+      when: string
+      howMany: string
+      detectionMethod: string
+    }
+  }
+}
+
 // ─── Internal ─────────────────────────────────────────────────────────────────
 
 export interface AICallContext {
@@ -351,6 +372,7 @@ export interface AIApiRequest {
     | GenerationD5Input
     | ConsistencyInput
     | ChainCompletionInput
+    | RootCauseBackfillInput
     | TextTranslationInput
     | ReportTranslationInput
 }

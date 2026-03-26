@@ -15,6 +15,9 @@ Rules:
 3. If the complaint does not contain a field clearly, return an empty string for that field.
 4. Keep the wording concise, specific, and technically clear.
 5. For IS / IS NOT entries, summarize only what is explicitly supported by the complaint text.
+6. Fill as many D2 fields as the complaint clearly supports, but avoid duplicate phrasing across fields.
+7. If the same fact could fit multiple fields, put it in the most specific field and leave the others empty.
+8. Do not repeat a "where" detail in what, when, howMany, or IS/IS NOT unless the complaint explicitly distinguishes them.
 
 CRITICAL: Respond with ONLY valid JSON.
 

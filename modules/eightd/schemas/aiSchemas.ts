@@ -40,9 +40,24 @@ export const textTranslationResultSchema = z.object({
 
 // ─── AI Output: Sufficiency Check ────────────────────────────────────────────
 
+export const sufficiencyFieldSchema = z.enum([
+  'what',
+  'where',
+  'when',
+  'howMany',
+  'detectionMethod',
+  'whyProblem',
+  'customerComplaintText',
+])
+
+export const sufficiencyIssueSchema = z.object({
+  field: sufficiencyFieldSchema,
+  message: z.string(),
+})
+
 export const sufficiencyResultSchema = z.object({
   sufficient: z.boolean(),
-  gaps: z.array(z.string()),
+  issues: z.array(sufficiencyIssueSchema).max(3),
 })
 
 // ─── IS / IS NOT Analysis Schema ─────────────────────────────────────────────
@@ -210,4 +225,14 @@ export const chainCompletionResultSchema = z.object({
   improvedCurrentWhy: z.string(),
   subsequentWhys: z.array(z.string()).min(0).max(4),
   rootCause: z.string()
+})
+
+export const rootCauseBackfillResultSchema = z.object({
+  possibleCause: z.string(),
+  why1: z.string(),
+  why2: z.string(),
+  why3: z.string(),
+  why4: z.string(),
+  why5: z.string(),
+  rootCause: z.string(),
 })

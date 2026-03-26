@@ -18,6 +18,7 @@ import { generateD3D4 } from '@/modules/eightd/lib/generateD3D4'
 import { generateD5 } from '@/modules/eightd/lib/generateD5'
 import { checkConsistency } from '@/modules/eightd/lib/consistencyCheck'
 import { completeChain } from '@/modules/eightd/lib/completeChain'
+import { backfillRootCauseChain } from '@/modules/eightd/lib/rootCauseBackfill'
 import { extractComplaint } from '@/modules/eightd/lib/complaintExtraction'
 import { translateText } from '@/modules/eightd/lib/textTranslation'
 import { translateReport } from '@/modules/eightd/lib/reportTranslation'
@@ -96,6 +97,13 @@ export async function POST(req: NextRequest) {
 
       case 'chainCompletion':
         result = await completeChain(payload as Parameters<typeof completeChain>[0], language)
+        break
+
+      case 'rootCauseBackfill':
+        result = await backfillRootCauseChain(
+          payload as Parameters<typeof backfillRootCauseChain>[0],
+          language,
+        )
         break
 
       case 'complaintExtraction':

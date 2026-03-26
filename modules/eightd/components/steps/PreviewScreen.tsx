@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReportData } from '@/modules/eightd/types/report'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -55,7 +55,7 @@ function formatMeasure(item: Partial<SystemicMeasureItem> | undefined) {
 }
 
 function formatIsIsNotValue(
-  language: ReportData['language'],
+  language: 'en' | 'de',
   isValue: string,
   isNotValue: string,
 ) {
@@ -81,7 +81,9 @@ interface PreviewScreenProps {
 
 export function PreviewScreen({ report, onBack, onNext }: PreviewScreenProps) {
   const t = useTranslations('preview')
+  const locale = useLocale()
   const { metadata, d1, d2, d3, d4, d5, d6, d7, d8 } = report
+  const language = locale === 'de' ? 'de' : 'en'
 
   return (
     <div className="space-y-6">
@@ -97,6 +99,9 @@ export function PreviewScreen({ report, onBack, onNext }: PreviewScreenProps) {
         <Row label={t('supplier')} value={metadata.supplier} />
         <Row label={t('product')} value={metadata.productName} />
         <Row label={t('partNumber')} value={metadata.partNumber} />
+        <Row label={t('customerComplaintNumber')} value={metadata.customerComplaintNumber} />
+        <Row label={t('customerPartNumber')} value={metadata.customerPartNumber} />
+        <Row label={t('supplierPartNumber')} value={metadata.supplierPartNumber} />
         <Row label={t('complaintDate')} value={metadata.complaintDate} />
         <Row label={t('reportDate')} value={metadata.reportDate} />
         <Row label={t('priority')} value={metadata.priority} />
@@ -131,19 +136,19 @@ export function PreviewScreen({ report, onBack, onNext }: PreviewScreenProps) {
         <Row label={t('failureCode')} value={d2.internalFailureCode} />
         <Row
           label={t('isWhat')}
-          value={formatIsIsNotValue(report.language, d2.isAnalysis.what.is, d2.isNotAnalysis.what.isNot)}
+          value={formatIsIsNotValue(language, d2.isAnalysis.what.is, d2.isNotAnalysis.what.isNot)}
         />
         <Row
           label={t('isWhere')}
-          value={formatIsIsNotValue(report.language, d2.isAnalysis.where.is, d2.isNotAnalysis.where.isNot)}
+          value={formatIsIsNotValue(language, d2.isAnalysis.where.is, d2.isNotAnalysis.where.isNot)}
         />
         <Row
           label={t('isWhen')}
-          value={formatIsIsNotValue(report.language, d2.isAnalysis.when.is, d2.isNotAnalysis.when.isNot)}
+          value={formatIsIsNotValue(language, d2.isAnalysis.when.is, d2.isNotAnalysis.when.isNot)}
         />
         <Row
           label={t('isHowMany')}
-          value={formatIsIsNotValue(report.language, d2.isAnalysis.howMany.is, d2.isNotAnalysis.howMany.isNot)}
+          value={formatIsIsNotValue(language, d2.isAnalysis.howMany.is, d2.isNotAnalysis.howMany.isNot)}
         />
         <Row label={t('notes')} value={d2.additionalNotes} />
       </Section>
@@ -166,6 +171,11 @@ export function PreviewScreen({ report, onBack, onNext }: PreviewScreenProps) {
             </div>
           ))
         )}
+        <Row label={t('cleanpointDeliveryOn')} value={d3.cleanpointDeliveryOn} />
+        <Row label={t('deliveryNoteNumber')} value={d3.deliveryNoteNumber} />
+        <Row label={t('deliveredOn')} value={d3.deliveredOn} />
+        <Row label={t('quantityCorrect')} value={d3.quantityCorrect} />
+        <Row label={t('quantityIncorrect')} value={d3.quantityIncorrect} />
         <Row label={t('effectivenessVerification')} value={d3.effectivenessVerification} />
       </Section>
 

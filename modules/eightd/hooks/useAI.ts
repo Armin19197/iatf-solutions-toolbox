@@ -31,6 +31,8 @@ import type {
   ConsistencyResult,
   ChainCompletionInput,
   ChainCompletionResult,
+  RootCauseBackfillInput,
+  RootCauseBackfillResult,
   ReportTranslationInput,
   ReportTranslationResult,
   TextTranslationInput,
@@ -598,4 +600,39 @@ export function useChainCompletion() {
   }, [])
 
   return { complete, loading, error, result, clear }
+}
+
+// ─── useRootCauseBackfill ─────────────────────────────────────────────────────
+
+export function useRootCauseBackfill() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<RootCauseBackfillResult | null>(null)
+
+  const backfill = useCallback(
+    async (input: RootCauseBackfillInput, language: 'en' | 'de') => {
+      setLoading(true)
+      setError(null)
+      setResult(null)
+
+      const res = await callAI<RootCauseBackfillResult>('rootCauseBackfill', language, input)
+
+      setLoading(false)
+      if (res.success) {
+        setResult(res.data)
+      } else {
+        setError(res.error)
+      }
+
+      return res
+    },
+    [],
+  )
+
+  const clear = useCallback(() => {
+    setResult(null)
+    setError(null)
+  }, [])
+
+  return { backfill, loading, error, result, clear }
 }

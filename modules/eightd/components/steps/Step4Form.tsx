@@ -20,8 +20,18 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Sparkles, RotateCcw, Loader2 } from 'lucide-react'
-import { useGeneration, useConsistencyCheck, useChainCompletion, useD5Generation } from '@/modules/eightd/hooks/useAI'
-import type { ConsistencyInput, ChainCompletionInput } from '@/modules/eightd/types/ai'
+import {
+  useGeneration,
+  useConsistencyCheck,
+  useChainCompletion,
+  useD5Generation,
+  useRootCauseBackfill,
+} from '@/modules/eightd/hooks/useAI'
+import type {
+  ConsistencyInput,
+  ChainCompletionInput,
+  RootCauseBackfillInput,
+} from '@/modules/eightd/types/ai'
 import { mapGenerationToFormData, mapGenerationD5ToFormData } from '@/modules/eightd/lib/mapGeneration'
 import { buildGenerationInput } from '@/modules/eightd/lib/buildGenerationInput'
 import { normalizeFiveWhyChain, normalizeWhyAnswer } from '@/modules/eightd/lib/aiTransforms'
@@ -67,6 +77,8 @@ function FiveWhyCard({
   whyError,
   onRegenerateFrom,
   regenLoading,
+  onGenerateFromRootCause,
+  rootCauseBackfillLoading,
 }: {
   label: string
   description: string
@@ -79,6 +91,8 @@ function FiveWhyCard({
   onRegenerateFrom?: (whyNumber: number) => void
   /** Whether a partial regeneration is currently in progress */
   regenLoading?: boolean
+  onGenerateFromRootCause?: () => void
+  rootCauseBackfillLoading?: boolean
 }) {
   const t = useTranslations('s4')
 
@@ -177,6 +191,24 @@ function FiveWhyCard({
             />
             {rootCauseError && (
               <p className="text-xs text-red-500">{rootCauseError}</p>
+            )}
+            {onGenerateFromRootCause && chain.rootCause.trim() && (
+              <div className="flex justify-end pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={onGenerateFromRootCause}
+                  disabled={rootCauseBackfillLoading}
+                >
+                  {rootCauseBackfillLoading ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-1 h-3 w-3" />
+                  )}
+                  {t('generateFromRootCause')}
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -374,6 +406,12 @@ export function Step4Form({
     complete: completeChain,
     loading: chainLoading,
   } = useChainCompletion()
+  const {
+    backfill,
+    loading: backfillLoading,
+    error: backfillError,
+    clear: clearBackfill,
+  } = useRootCauseBackfill()
 
   const regenerateD5FromD4 = useCallback(
     async (nextD4: D4RootCause) => {
@@ -508,6 +546,66 @@ export function Step4Form({
     [d4, d2, language, completeChain, handleD4Change, regenerateD5FromD4],
   )
 
+  const handleGenerateFromRootCause = useCallback(
+    async (chainType: 'tua' | 'tun') => {
+      const chain = d4[chainType]
+      if (!chain.rootCause.trim()) return
+
+      clearBackfill()
+
+      const input: RootCauseBackfillInput = {
+        chainType,
+        rootCause: chain.rootCause.trim(),
+        context: {
+          d2: {
+            what: d2.what,
+            where: d2.where,
+            when: d2.when,
+            howMany: d2.howMany,
+            detectionMethod: d2.detectionMethod,
+          },
+        },
+      }
+
+      const result = await backfill(input, language)
+      if (!result.success) return
+
+      const normalizedChain = normalizeFiveWhyChain({
+        ...chain,
+        possibleCause: result.data.possibleCause.trim() || chain.possibleCause,
+        why1: result.data.why1,
+        why2: result.data.why2,
+        why3: result.data.why3,
+        why4: result.data.why4,
+        why5: result.data.why5,
+        rootCause: result.data.rootCause.trim() || chain.rootCause,
+      })
+
+      const nextD4: D4RootCause = {
+        ...d4,
+        [chainType]: normalizedChain,
+      }
+
+      if (chainType === 'tua' && normalizedChain.rootCause.trim()) {
+        nextD4.sua = {
+          ...nextD4.sua,
+          derivedFrom: normalizedChain.rootCause,
+        }
+      }
+
+      if (chainType === 'tun' && normalizedChain.rootCause.trim()) {
+        nextD4.sun = {
+          ...nextD4.sun,
+          derivedFrom: normalizedChain.rootCause,
+        }
+      }
+
+      handleD4Change(nextD4)
+      await regenerateD5FromD4(nextD4)
+    },
+    [backfill, clearBackfill, d2, d4, handleD4Change, language, regenerateD5FromD4],
+  )
+
   return (
     <div className="space-y-6">
       {/* AI generation card */}
@@ -542,6 +640,7 @@ export function Step4Form({
         retryDisabled={genLoading}
       />
       <AIErrorAlert error={d5RegenError} />
+      <AIErrorAlert error={backfillError} />
 
       {/* D4 — Root Cause 5-Why */}
       <Card>
@@ -592,6 +691,8 @@ export function Step4Form({
               whyError={whyErr}
               onRegenerateFrom={(n) => handleRegenerateFromWhy('tua', n)}
               regenLoading={chainLoading || d5RegenLoading}
+              onGenerateFromRootCause={() => handleGenerateFromRootCause('tua')}
+              rootCauseBackfillLoading={backfillLoading || d5RegenLoading}
             />
           </TemplateSection>
 
@@ -612,6 +713,8 @@ export function Step4Form({
               whyError={whyErr}
               onRegenerateFrom={(n) => handleRegenerateFromWhy('tun', n)}
               regenLoading={chainLoading || d5RegenLoading}
+              onGenerateFromRootCause={() => handleGenerateFromRootCause('tun')}
+              rootCauseBackfillLoading={backfillLoading || d5RegenLoading}
             />
           </TemplateSection>
 
