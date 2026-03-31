@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getIronSession } from 'iron-session'
 import { checkRateLimit } from '@/lib/rate-limit/rateLimit'
 import { redeemCode, type RedeemResult } from '@/lib/redis/codeStore'
-import { getSession } from '@/lib/session/session'
+import { getSessionOptions, type SessionData } from '@/lib/session/session'
 import { redeemSchema } from '@/modules/eightd/schemas/formSchemas'
 
 export async function POST(request: NextRequest) {
@@ -49,17 +50,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: errorMessage }, { status: 401 })
   }
 
-  // 4. Issue 24h session cookie
+  // 4. Issue session cookie — use request+response directly so iron-session
+  //    writes Set-Cookie onto the actual response object (not via cookies() store).
   try {
-    const session = await getSession()
+    const response = NextResponse.json({ success: true })
+    const session = await getIronSession<SessionData>(request, response, getSessionOptions())
     session.isAuthenticated = true
     session.issuedAt = Date.now()
     await session.save()
+    return response
   } catch (err) {
     console.error('[redeem] Session error:', err instanceof Error ? err.message : err)
     return NextResponse.json({ success: false, error: 'Failed to create session' }, { status: 500 })
   }
-
-  return NextResponse.json({ success: true })
 }
 

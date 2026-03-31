@@ -25,7 +25,7 @@ function getSessionPassword(): string {
  * request time — NOT at module-load / build time.  This prevents the build
  * from throwing when SESSION_SECRET is absent in the CI/Netlify environment.
  */
-function getSessionOptions(): SessionOptions {
+export function getSessionOptions(): SessionOptions {
   return {
     password: getSessionPassword(),
     cookieName: 'iatf-session',
