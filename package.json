@@ -12,9 +12,11 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "dev:landing": "turbo dev --filter=@iatf/landing",
-    "dev:tool": "turbo dev --filter=@iatf/tool",
+    "dev:eightd": "turbo dev --filter=@iatf/eightd",
+    "dev:csr": "turbo dev --filter=@iatf/csr",
     "build:landing": "turbo build --filter=@iatf/landing",
-    "build:tool": "turbo build --filter=@iatf/tool"
+    "build:eightd": "turbo build --filter=@iatf/eightd",
+    "build:csr": "turbo build --filter=@iatf/csr"
   },
   "devDependencies": {
     "turbo": "^2.5.3"
