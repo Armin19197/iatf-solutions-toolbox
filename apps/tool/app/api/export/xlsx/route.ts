@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-export const runtime = 'nodejs'
-
 import ExcelJS from 'exceljs'
 import type { ReportData } from '@/modules/eightd/types/report'
 import { reportDataSchema } from '@/modules/eightd/schemas/reportValidation'

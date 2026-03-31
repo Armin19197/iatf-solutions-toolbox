@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireBillingAdmin } from '@/lib/billing/adminAuth'
 import { deleteIntegratedTool, listIntegratedTools, upsertIntegratedTool } from '@/lib/billing/store'
 
-export const runtime = 'nodejs'
-
 export async function GET(request: NextRequest) {
   try {
     const activeOnly = request.nextUrl.searchParams.get('activeOnly') === 'true'

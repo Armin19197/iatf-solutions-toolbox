@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireBillingAdmin } from '@/lib/billing/adminAuth'
 import { getStripeConfig, updateStripeConfig } from '@/lib/billing/store'
 
-export const runtime = 'nodejs'
-
 export async function GET(request: NextRequest) {
   const unauthorized = requireBillingAdmin(request)
   if (unauthorized) {

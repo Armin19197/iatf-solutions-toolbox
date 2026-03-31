@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireBillingAdmin } from '@/lib/billing/adminAuth'
 import { deleteBillingPlan, listBillingPlans, upsertBillingPlan } from '@/lib/billing/store'
 
-export const runtime = 'nodejs'
-
 export async function GET(request: NextRequest) {
   try {
     const toolId = request.nextUrl.searchParams.get('toolId')

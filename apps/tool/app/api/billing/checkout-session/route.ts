@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createBillingCheckoutSession } from '@/lib/billing/stripe'
 import { getStripeConfig, listBillingPlans } from '@/lib/billing/store'
 
-export const runtime = 'nodejs'
-
 function resolveUrl(baseUrl: string, inputUrl: string): string {
   if (/^https?:\/\//i.test(inputUrl)) {
     return inputUrl

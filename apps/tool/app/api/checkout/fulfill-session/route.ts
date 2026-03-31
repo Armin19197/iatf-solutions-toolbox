@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripeClient } from '@/lib/billing/stripe'
 import { fulfillCheckoutSession } from '@/lib/billing/fulfillment'
 
-export const runtime = 'nodejs'
-
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}))
   const sessionId = typeof body?.sessionId === 'string' ? body.sessionId.trim() : ''

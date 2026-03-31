@@ -25,7 +25,6 @@ import { translateReport } from '@/modules/eightd/lib/reportTranslation'
 import { isAuthenticated } from '@/lib/session/session'
 import type { AIApiRequest, AIApiResponse } from '@/modules/eightd/types/ai'
 
-export const runtime = 'nodejs'
 export const maxDuration = 60 // Netlify ignores this (uses netlify.toml); Vercel uses it
 
 export async function POST(req: NextRequest) {

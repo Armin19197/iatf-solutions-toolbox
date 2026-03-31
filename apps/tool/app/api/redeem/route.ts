@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-export const runtime = 'nodejs'
-
 import { checkRateLimit } from '@/lib/rate-limit/rateLimit'
 import { redeemCode, type RedeemResult } from '@/lib/redis/codeStore'
 import { getSession } from '@/lib/session/session'

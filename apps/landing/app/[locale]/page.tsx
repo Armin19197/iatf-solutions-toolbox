@@ -258,7 +258,7 @@ export default function LandingPage() {
       features: [t('pricing.single_f1'), t('pricing.single_f2'), t('pricing.single_f3')],
       action: (
         <BuyCreditsButton
-          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_8D_SINGLE || process.env.STRIPE_PRICE_8D_SINGLE}
+          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_8D_SINGLE}
           creditCountHint={1}
           toolId="tool_8d"
           label={t('pricing.single_btn')}
@@ -273,7 +273,7 @@ export default function LandingPage() {
       features: [t('pricing.fivePack_f1'), t('pricing.fivePack_f2'), t('pricing.fivePack_f3')],
       action: (
         <BuyCreditsButton
-          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_8D_FIVE || process.env.STRIPE_PRICE_8D_FIVE}
+          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_8D_FIVE}
           creditCountHint={5}
           toolId="tool_8d"
           label={t('pricing.fivePack_btn')}
@@ -304,7 +304,7 @@ export default function LandingPage() {
       features: [t('pricing.csrSingle_f1'), t('pricing.csrSingle_f2'), t('pricing.csrSingle_f3')],
       action: (
         <BuyCreditsButton
-          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_CSR_SINGLE || process.env.STRIPE_PRICE_CSR_SINGLE}
+          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_CSR_SINGLE}
           creditCountHint={1}
           toolId="tool_csr"
           label={t('pricing.csrSingle_btn')}
@@ -319,7 +319,7 @@ export default function LandingPage() {
       features: [t('pricing.csrFive_f1'), t('pricing.csrFive_f2'), t('pricing.csrFive_f3')],
       action: (
         <BuyCreditsButton
-          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_CSR_FIVE || process.env.STRIPE_PRICE_CSR_FIVE}
+          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_CSR_FIVE}
           creditCountHint={5}
           toolId="tool_csr"
           label={t('pricing.csrFive_btn')}
@@ -334,7 +334,7 @@ export default function LandingPage() {
       features: [t('pricing.csrTwenty_f1'), t('pricing.csrTwenty_f2'), t('pricing.csrTwenty_f3')],
       action: (
         <BuyCreditsButton
-          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_CSR_TWENTY || process.env.STRIPE_PRICE_CSR_TWENTY}
+          priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_CSR_TWENTY}
           creditCountHint={20}
           toolId="tool_csr"
           label={t('pricing.csrTwenty_btn')}
