@@ -346,8 +346,8 @@ export default function LandingPage() {
 
   const steps = [
     { num: '1', label: t('tools.step1') },
-    { num: '2', label: t('tools.step2'), href: `/${locale}/unlock` },
-    { num: '3', label: t('tools.step3'), href: `/${locale}/generator` },
+    { num: '2', label: t('tools.step2'), href: `${process.env.NEXT_PUBLIC_TOOL_URL}/${locale}/unlock` },
+    { num: '3', label: t('tools.step3'), href: `${process.env.NEXT_PUBLIC_TOOL_URL}/${locale}/generator` },
     { num: '4', label: t('tools.step4') },
   ]
 
@@ -414,9 +414,9 @@ export default function LandingPage() {
               <h3 className="lp-tool-title">{t('tools.generatorTitle')}</h3>
               <p className="lp-tool-desc">{t('tools.generatorDesc')}</p>
               <div className="lp-tool-actions">
-                <Link href={`/${locale}/unlock`} className="lp-btn-primary">
+                <a href={`${process.env.NEXT_PUBLIC_TOOL_URL}/${locale}/unlock`} className="lp-btn-primary">
                   {t('hero.openToolBtn')}
-                </Link>
+                </a>
               </div>
             </div>
             {/* CSR Norm Matrix */}
