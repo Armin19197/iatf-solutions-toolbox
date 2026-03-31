@@ -8,14 +8,17 @@ let redisInstance: Redis | null = null
  */
 export function getRedis(): Redis {
   if (!redisInstance) {
-    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-      throw new Error('Missing Upstash Redis environment variables: KV_REST_API_URL, KV_REST_API_TOKEN')
+    const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+    const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+
+    if (!url || !token) {
+      throw new Error(
+        'Missing Upstash Redis environment variables. ' +
+        'Set KV_REST_API_URL / KV_REST_API_TOKEN or UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN',
+      )
     }
-    
-    redisInstance = new Redis({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
-    })
+
+    redisInstance = new Redis({ url, token })
   }
   
   return redisInstance
