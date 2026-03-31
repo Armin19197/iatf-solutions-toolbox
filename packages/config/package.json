@@ -1,0 +1,13 @@
+{
+  "name": "@iatf/config",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./i18n/routing": "./src/i18n/routing.ts",
+    "./i18n/navigation": "./src/i18n/navigation.ts",
+    "./i18n/request-config": "./src/i18n/request-config.ts"
+  },
+  "peerDependencies": {
+    "next-intl": "^4.0.0"
+  }
+}
