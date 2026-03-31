@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createBillingCheckoutSession } from '@/lib/billing/stripe'
 import { getStripeConfig, listBillingPlans } from '@/lib/billing/store'
 
+const ALLOWED_ORIGINS = [
+  'https://8-d-three.vercel.app',
+  'https://iatf-solutions.com',
+  'https://www.iatf-solutions.com',
+]
+
+function getCorsHeaders(request: NextRequest): HeadersInit {
+  const origin = request.headers.get('origin') || ''
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+  }
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: getCorsHeaders(request) })
+}
+
 function resolveUrl(baseUrl: string, inputUrl: string): string {
   if (/^https?:\/\//i.test(inputUrl)) {
     return inputUrl
@@ -58,6 +79,7 @@ function resolveInlineFallback(toolId: string, creditCountHint: number): {
 }
 
 export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request)
   try {
     const body = await request.json()
 
@@ -104,7 +126,7 @@ export async function POST(request: NextRequest) {
           error:
             'Unable to resolve Stripe price. Configure active billing plans in admin or set STRIPE/NEXT_PUBLIC_STRIPE price env vars.',
         },
-        { status: 400 },
+        { status: 400, headers: corsHeaders },
       )
     }
 
@@ -116,7 +138,7 @@ export async function POST(request: NextRequest) {
             'Stripe is not configured. Set STRIPE_SECRET_KEY in environment variables or save a secret key in Billing Admin settings.',
           code: 'STRIPE_NOT_CONFIGURED',
         },
-        { status: 503 },
+        { status: 503, headers: corsHeaders },
       )
     }
 
@@ -154,9 +176,9 @@ export async function POST(request: NextRequest) {
       url: session.url,
       sessionId: session.id,
       planId: selectedPlan?.id || null,
-    })
+    }, { headers: corsHeaders })
   } catch (error) {
     console.error('[billing/checkout-session][POST]', error)
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500, headers: corsHeaders })
   }
 }
