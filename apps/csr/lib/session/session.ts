@@ -26,14 +26,18 @@ function getSessionPassword(): string {
  * from throwing when SESSION_SECRET is absent in the CI/Netlify environment.
  */
 function getSessionOptions(): SessionOptions {
+  const isProduction = process.env.NODE_ENV === 'production'
+  
   return {
     password: getSessionPassword(),
     cookieName: 'iatf-session',
     cookieOptions: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: SESSION_TTL_SECONDS,
+      // Allow cookies to work across subdomains in production
+      domain: isProduction ? '.iatf-solutions.com' : undefined,
     },
   }
 }
