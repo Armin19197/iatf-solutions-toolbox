@@ -55,11 +55,18 @@ export async function POST(request: NextRequest) {
     session.isAuthenticated = true
     session.issuedAt = Date.now()
     await session.save()
+    
+    console.log('[redeem] Session saved. Authenticated:', session.isAuthenticated)
   } catch (err) {
-    console.error('[redeem] Session error:', err instanceof Error ? err.message : err)
+    console.error('[redeem] Session save failed:', err)
     return NextResponse.json({ success: false, error: 'Failed to create session' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  const response = NextResponse.json({ success: true })
+  
+  // Log response headers for debugging
+  console.log('[redeem] Response headers:', Object.fromEntries(response.headers.entries()))
+  
+  return response
 }
 
