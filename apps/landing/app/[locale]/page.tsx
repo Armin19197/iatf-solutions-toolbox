@@ -239,7 +239,7 @@ const pageStyles = `
   }
 `
 
-const TOOL_URL = 'https://app.iatf-solutions.com'
+const TOOL_URL = process.env.NEXT_PUBLIC_TOOL_URL || 'https://app.iatf-solutions.com'
 
 export default function LandingPage() {
   const t = useTranslations('landing')
