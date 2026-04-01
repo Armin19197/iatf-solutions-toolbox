@@ -1,7 +1,6 @@
 'use client'
 
 import { useLocale, useTranslations } from 'next-intl'
-import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { LanguageToggle } from '@/components/language-toggle'
 import { BuyCreditsButton } from '@/components/BuyCreditsButton'
@@ -240,6 +239,8 @@ const pageStyles = `
   }
 `
 
+const TOOL_URL = 'https://app.iatf-solutions.com'
+
 export default function LandingPage() {
   const t = useTranslations('landing')
   const locale = useLocale()
@@ -346,8 +347,8 @@ export default function LandingPage() {
 
   const steps = [
     { num: '1', label: t('tools.step1') },
-    { num: '2', label: t('tools.step2'), href: `${process.env.NEXT_PUBLIC_TOOL_URL}/${locale}/unlock` },
-    { num: '3', label: t('tools.step3'), href: `${process.env.NEXT_PUBLIC_TOOL_URL}/${locale}/generator` },
+    { num: '2', label: t('tools.step2'), href: `${TOOL_URL}/${locale}/unlock` },
+    { num: '3', label: t('tools.step3'), href: `${TOOL_URL}/${locale}/generator` },
     { num: '4', label: t('tools.step4') },
   ]
 
@@ -414,7 +415,7 @@ export default function LandingPage() {
               <h3 className="lp-tool-title">{t('tools.generatorTitle')}</h3>
               <p className="lp-tool-desc">{t('tools.generatorDesc')}</p>
               <div className="lp-tool-actions">
-                <a href={`${process.env.NEXT_PUBLIC_TOOL_URL}/${locale}/unlock`} className="lp-btn-primary">
+                <a href={`${TOOL_URL}/${locale}/unlock`} className="lp-btn-primary">
                   {t('hero.openToolBtn')}
                 </a>
               </div>
@@ -444,7 +445,7 @@ export default function LandingPage() {
                 <div className="lp-step-content">
                   <div className="lp-step-circle">{step.num}</div>
                   {step.href ? (
-                    <Link href={step.href} className="lp-step-label">{step.label}</Link>
+                    <a href={step.href} className="lp-step-label">{step.label}</a>
                   ) : (
                     <span className="lp-step-label">{step.label}</span>
                   )}
