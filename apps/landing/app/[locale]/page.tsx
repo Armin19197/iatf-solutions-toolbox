@@ -420,7 +420,7 @@ export default function LandingPage() {
                 </a>
               </div>
             </div>
-            {/* CSR Norm Matrix */}
+            {/* CSR Norm Matrix  */}
             <div>
               <div className="lp-tool-img">
                 <img
