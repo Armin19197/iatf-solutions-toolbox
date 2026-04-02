@@ -36,7 +36,7 @@ export function getSessionOptions(): SessionOptions {
       secure: isProduction,
       sameSite: 'lax',
       maxAge: SESSION_TTL_SECONDS,
-      domain: isProduction ? '.iatf-solutions.com' : undefined,
+      path: '/',
     },
   }
 }
